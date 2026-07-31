@@ -1,0 +1,92 @@
+PROPRIETARY SOURCE-AVAILABLE LICENSE (VIEW-ONLY / ALL RIGHTS RESERVED)
+
+Copyright (c) 2026 Panagiotis Papatheodoropoulos. All rights reserved.
+
+IMPORTANT — READ CAREFULLY:
+This license agreement ("License") is a legally binding agreement between you 
+(an individual or entity) and the copyright holder ("Copyright Holder") regarding 
+the WealthOS software, source code, documentation, architectures, and associated materials 
+(collectively, the "Software").
+
+By viewing, accessing, cloning, downloading, or inspecting any part of the Software, 
+you agree to be bound by the terms of this License. If you do not agree to these terms, 
+do not view, access, clone, download, or use the Software.
+
+================================================================================
+1. GRANT OF VIEW-ONLY EVALUATION LICENSE
+================================================================================
+Subject to the restrictions outlined below, the Copyright Holder grants you a personal,
+non-exclusive, non-transferable, revocable, and non-sublicensable limited license to:
+
+  (a) View, read, and inspect the source code solely for personal, non-commercial 
+      portfolio review, peer examination, and educational evaluation purposes;
+  (b) Execute the Software locally on your personal machine solely for the purpose of 
+      evaluating its features, technical implementation, and architectural design.
+
+================================================================================
+2. PROHIBITED ACTIONS & STRICT RESTRICTIONS
+================================================================================
+Except as expressly permitted in Section 1, ALL RIGHTS ARE RESERVED. You are strictly 
+prohibited from performing, permitting, or facilitating any of the following:
+
+  (a) NO COPYING OR REPRODUCTION:
+      You may NOT copy, replicate, clone, duplicate, republish, or mirror the Software,
+      in whole or in part, into any other repository, public host, archive, or distribution 
+      channel without prior written permission from the Copyright Holder.
+
+  (b) NO MODIFICATION OR DERIVATIVE WORKS:
+      You may NOT alter, edit, modify, merge, translate, adapt, or create derivative 
+      works based upon any portion of the Software.
+
+  (c) NO REDISTRIBUTION OR SUBLICENSING:
+      You may NOT distribute, sell, resell, lease, rent, loan, sublicense, transfer, 
+      assign, or otherwise convey the Software or any portion thereof to any third party.
+
+  (d) NO COMMERCIAL USE:
+      You may NOT use the Software or any part of its source code, models, algorithms, 
+      or architectures for any commercial purpose, enterprise operation, revenue-generating 
+      service, or as part of a Software-as-a-Service (SaaS) or Platform-as-a-Service (PaaS) offering.
+
+  (e) NO EXTRACTION OF PROPRIETARY ALGORITHMS:
+      You may NOT extract, reverse engineer, decompile, or incorporate the proprietary quantitative 
+      models, valuation engines (DCF, Graham, Buffett Score), tax audit algorithms (Greek Law 4172/2013), 
+      or risk analytics engines into any external platform or commercial project.
+
+  (f) PRESERVATION OF NOTICES:
+      You may NOT remove, alter, or obscure any copyright notices, author attributions, 
+      trademarks, or disclaimer statements present within the Software or documentation.
+
+================================================================================
+3. INTELLECTUAL PROPERTY & OWNERSHIP
+================================================================================
+The Software is protected by copyright, intellectual property laws, and international 
+copyright treaties. The Copyright Holder retains all right, title, interest, and intellectual 
+property in and to the Software, including but not limited to all source code, algorithms, 
+user interface designs, schemas, and documentation. No title or ownership rights are 
+transferred to you under this License.
+
+================================================================================
+4. TERMINATION
+================================================================================
+This License is effective until terminated. Your rights under this License will terminate 
+automatically and immediately without notice if you fail to comply with any of its terms. 
+Upon termination, you must immediately cease all inspection and use of the Software and 
+permanently delete and destroy all local copies and clones in your possession.
+
+================================================================================
+5. FINANCIAL DISCLAIMER
+================================================================================
+THE SOFTWARE IS PROVIDED FOR INFORMATIONAL AND TECHNICAL DEMONSTRATION PURPOSES ONLY 
+AND DOES NOT CONSTITUTE FINANCIAL, INVESTMENT, TAX, OR LEGAL ADVICE. THE COPYRIGHT HOLDER 
+IS NOT A LICENSED FINANCIAL ADVISOR, BROKER-DEALER, OR TAX CONSULTANT. ALL VALUATIONS, 
+PROJECTIONS, AND METRICS GENERATED BY THE SOFTWARE ARE SIMULATED ESTIMATES.
+
+================================================================================
+6. DISCLAIMER OF WARRANTIES & LIMITATION OF LIABILITY
+================================================================================
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, 
+INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR 
+PURPOSE, ACCURACY, AND NON-INFRINGEMENT. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR 
+CONTRIBUTORS BE LIABLE FOR ANY CLAIM, DAMAGES, LOSS OF PROFITS, LOSS OF CAPITAL, OR 
+OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, 
+OUT OF, OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
