@@ -1,0 +1,6 @@
+logging:
+  level:
+    com.wealthos: INFO
+    org.hibernate.SQL: WARN
+
+# datasource/redis/rabbitmq - @ServiceConnection connection-details beans, override profile-based property. jpa/flyway application.yml.
