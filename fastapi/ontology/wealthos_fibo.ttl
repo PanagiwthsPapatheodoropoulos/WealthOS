@@ -1,0 +1,150 @@
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix fibo-fnd-acc-cur: <https://spec.edmcouncil.org/fibo/ontology/FND/Accounting/CurrencyAmount/> .
+@prefix fibo-sec-eq: <https://spec.edmcouncil.org/fibo/ontology/SEC/Equities/EquityInstruments/> .
+@prefix fibo-sec-fund: <https://spec.edmcouncil.org/fibo/ontology/SEC/Funds/Funds/> .
+@prefix fibo-sec-dso: <https://spec.edmcouncil.org/fibo/ontology/SEC/Debt/DebtInstruments/> .
+@prefix fibo-fnd-pty-pty: <https://spec.edmcouncil.org/fibo/ontology/FND/Parties/Parties/> .
+@prefix fibo-fnd-txn: <https://spec.edmcouncil.org/fibo/ontology/FND/TransactionsExt/MarketTransactions/> .
+@prefix wos: <https://wealthos.io/ontology/core#> .
+
+<https://wealthos.io/ontology/core>
+    a owl:Ontology ;
+    rdfs:label "WealthOS Financial & Investment Core Ontology" ;
+    rdfs:comment "FIBO-aligned semantic ontology for investment portfolios, assets, risk intelligence and transactions" ;
+    owl:versionInfo "1.0.0" .
+
+### --- CLASSES --- ###
+
+wos:FinancialAsset a owl:Class ;
+    rdfs:subClassOf fibo-fnd-acc-cur:FinancialAsset ;
+    rdfs:label "Financial Asset" ;
+    rdfs:comment "A tradable financial instrument or store of value" .
+
+wos:Stock a owl:Class ;
+    rdfs:subClassOf wos:FinancialAsset, fibo-sec-eq:Share ;
+    rdfs:label "Stock Equity" ;
+    rdfs:comment "Publicly traded equity security" .
+
+wos:ETF a owl:Class ;
+    rdfs:subClassOf wos:FinancialAsset, fibo-sec-fund:ExchangeTradedFund ;
+    rdfs:label "Exchange Traded Fund" ;
+    rdfs:comment "Pooled investment fund traded on stock exchanges" .
+
+wos:CryptoAsset a owl:Class ;
+    rdfs:subClassOf wos:FinancialAsset ;
+    rdfs:label "Cryptocurrency Asset" ;
+    rdfs:comment "Decentralized digital currency or cryptographic asset" .
+
+wos:Portfolio a owl:Class ;
+    rdfs:subClassOf fibo-fnd-pty-pty:Portfolio ;
+    rdfs:label "Investment Portfolio" ;
+    rdfs:comment "A structured collection of financial asset holdings and cash balances" .
+
+wos:PortfolioHolding a owl:Class ;
+    rdfs:label "Portfolio Holding Position" ;
+    rdfs:comment "A position holding a specific quantity of a financial asset inside a portfolio" .
+
+wos:EconomicSector a owl:Class ;
+    rdfs:label "Economic Sector" ;
+    rdfs:comment "GICS economic sector classification (e.g. Technology, Healthcare, Energy)" .
+
+wos:FinancialTransaction a owl:Class ;
+    rdfs:subClassOf fibo-fnd-txn:Transaction ;
+    rdfs:label "Financial Transaction" ;
+    rdfs:comment "An executed buy, sell, deposit or withdrawal event" .
+
+wos:RiskMetric a owl:Class ;
+    rdfs:label "Risk Analysis Metric" ;
+    rdfs:comment "Quantitative risk metric such as Sharpe Ratio, Volatility, or Value at Risk" .
+
+### --- OBJECT PROPERTIES --- ###
+
+wos:hasHolding a owl:ObjectProperty ;
+    rdfs:domain wos:Portfolio ;
+    rdfs:range wos:PortfolioHolding ;
+    rdfs:label "has holding" .
+
+wos:holdsAsset a owl:ObjectProperty ;
+    rdfs:domain wos:PortfolioHolding ;
+    rdfs:range wos:FinancialAsset ;
+    rdfs:label "holds asset" .
+
+wos:belongsToSector a owl:ObjectProperty ;
+    rdfs:domain wos:FinancialAsset ;
+    rdfs:range wos:EconomicSector ;
+    rdfs:label "belongs to sector" .
+
+wos:hasTransaction a owl:ObjectProperty ;
+    rdfs:domain wos:Portfolio ;
+    rdfs:range wos:FinancialTransaction ;
+    rdfs:label "has transaction" .
+
+wos:involvesAsset a owl:ObjectProperty ;
+    rdfs:domain wos:FinancialTransaction ;
+    rdfs:range wos:FinancialAsset ;
+    rdfs:label "involves asset" .
+
+### --- DATA PROPERTIES --- ###
+
+wos:symbol a owl:DatatypeProperty ;
+    rdfs:domain wos:FinancialAsset ;
+    rdfs:range xsd:string ;
+    rdfs:label "ticker symbol" .
+
+wos:assetName a owl:DatatypeProperty ;
+    rdfs:domain wos:FinancialAsset ;
+    rdfs:range xsd:string ;
+    rdfs:label "asset name" .
+
+wos:assetType a owl:DatatypeProperty ;
+    rdfs:domain wos:FinancialAsset ;
+    rdfs:range xsd:string ;
+    rdfs:label "asset type" .
+
+wos:currency a owl:DatatypeProperty ;
+    rdfs:domain wos:FinancialAsset ;
+    rdfs:range xsd:string ;
+    rdfs:label "trading currency" .
+
+wos:currentMarketPrice a owl:DatatypeProperty ;
+    rdfs:domain wos:FinancialAsset ;
+    rdfs:range xsd:decimal ;
+    rdfs:label "current market price" .
+
+wos:holdingQuantity a owl:DatatypeProperty ;
+    rdfs:domain wos:PortfolioHolding ;
+    rdfs:range xsd:decimal ;
+    rdfs:label "holding quantity" .
+
+wos:holdingMarketValue a owl:DatatypeProperty ;
+    rdfs:domain wos:PortfolioHolding ;
+    rdfs:range xsd:decimal ;
+    rdfs:label "holding market value" .
+
+wos:holdingAvgCost a owl:DatatypeProperty ;
+    rdfs:domain wos:PortfolioHolding ;
+    rdfs:range xsd:decimal ;
+    rdfs:label "holding average cost basis" .
+
+wos:totalPortfolioValue a owl:DatatypeProperty ;
+    rdfs:domain wos:Portfolio ;
+    rdfs:range xsd:decimal ;
+    rdfs:label "total portfolio value" .
+
+wos:cashBalance a owl:DatatypeProperty ;
+    rdfs:domain wos:Portfolio ;
+    rdfs:range xsd:decimal ;
+    rdfs:label "available cash balance" .
+
+wos:riskScore a owl:DatatypeProperty ;
+    rdfs:domain wos:FinancialAsset ;
+    rdfs:range xsd:decimal ;
+    rdfs:label "risk volatility score" .
+
+wos:esgScore a owl:DatatypeProperty ;
+    rdfs:domain wos:FinancialAsset ;
+    rdfs:range xsd:decimal ;
+    rdfs:label "ESG sustainability score" .
