@@ -1,0 +1,137 @@
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix wos: <https://wealthos.io/ontology/core#> .
+
+### ========================================================================= ###
+### WealthOS SHACL (Shapes Constraint Language) Data Quality & Governance Spec
+### ========================================================================= ###
+
+wos:FinancialAssetShape a sh:NodeShape ;
+    sh:targetClass wos:FinancialAsset, wos:Stock, wos:ETF, wos:CryptoAsset ;
+    rdfs:label "Financial Asset Validation Shape" ;
+    rdfs:comment "Enforces integrity constraints on tradable financial assets" ;
+
+    # 1. Symbol constraint: Must be present, unique string, matching ticker pattern
+    sh:property [
+        sh:path wos:symbol ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:pattern "^[A-Z0-9.-]+$" ;
+        sh:name "ticker symbol" ;
+        sh:description "Asset ticker symbol must be uppercase alphanumeric" ;
+        sh:severity sh:Violation ;
+    ] ;
+
+    # 2. Market price constraint: Must be positive decimal
+    sh:property [
+        sh:path wos:currentMarketPrice ;
+        sh:datatype xsd:decimal ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:minExclusive 0.0 ;
+        sh:name "market price" ;
+        sh:description "Market price must be strictly greater than 0.0" ;
+        sh:severity sh:Violation ;
+    ] ;
+
+    # 3. Asset Type constraint: Must be recognized instrument type
+    sh:property [
+        sh:path wos:assetType ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+        sh:in ( "STOCK" "ETF" "CRYPTO" "BOND" "COMMODITY" ) ;
+        sh:name "asset category" ;
+        sh:severity sh:Violation ;
+    ] ;
+
+    # 4. Risk Score constraint: 0.0 <= riskScore <= 1.0
+    sh:property [
+        sh:path wos:riskScore ;
+        sh:datatype xsd:decimal ;
+        sh:minInclusive 0.0 ;
+        sh:maxInclusive 1.0 ;
+        sh:name "risk rating score" ;
+        sh:description "Risk score must be a normalized probability/volatility between 0.0 and 1.0" ;
+        sh:severity sh:Warning ;
+    ] ;
+
+    # 5. ESG Score constraint: 0.0 <= esgScore <= 100.0
+    sh:property [
+        sh:path wos:esgScore ;
+        sh:datatype xsd:decimal ;
+        sh:minInclusive 0.0 ;
+        sh:maxInclusive 100.0 ;
+        sh:name "ESG score" ;
+        sh:description "ESG sustainability rating must be between 0.0 and 100.0" ;
+        sh:severity sh:Warning ;
+    ] ;
+
+    # 6. Sector relationship: Must point to an EconomicSector
+    sh:property [
+        sh:path wos:belongsToSector ;
+        sh:class wos:EconomicSector ;
+        sh:minCount 1 ;
+        sh:name "economic sector" ;
+        sh:description "Asset must be classified under an economic sector" ;
+        sh:severity sh:Violation ;
+    ] .
+
+
+### --- Portfolio Shape --- ###
+
+wos:PortfolioShape a sh:NodeShape ;
+    sh:targetClass wos:Portfolio ;
+    rdfs:label "Investment Portfolio Validation Shape" ;
+
+    sh:property [
+        sh:path wos:cashBalance ;
+        sh:datatype xsd:decimal ;
+        sh:minInclusive 0.0 ;
+        sh:name "cash balance" ;
+        sh:description "Cash balance cannot be negative" ;
+        sh:severity sh:Violation ;
+    ] ;
+
+    sh:property [
+        sh:path wos:totalPortfolioValue ;
+        sh:datatype xsd:decimal ;
+        sh:minInclusive 0.0 ;
+        sh:name "total portfolio value" ;
+        sh:description "Total portfolio valuation cannot be negative" ;
+        sh:severity sh:Violation ;
+    ] .
+
+
+### --- Portfolio Holding Shape --- ###
+
+wos:PortfolioHoldingShape a sh:NodeShape ;
+    sh:targetClass wos:PortfolioHolding ;
+    rdfs:label "Holding Position Validation Shape" ;
+
+    sh:property [
+        sh:path wos:holdsAsset ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:name "target asset" ;
+        sh:severity sh:Violation ;
+    ] ;
+
+    sh:property [
+        sh:path wos:holdingQuantity ;
+        sh:datatype xsd:decimal ;
+        sh:minExclusive 0.0 ;
+        sh:name "holding quantity" ;
+        sh:description "Holding quantity must be strictly greater than 0" ;
+        sh:severity sh:Violation ;
+    ] ;
+
+    sh:property [
+        sh:path wos:holdingMarketValue ;
+        sh:datatype xsd:decimal ;
+        sh:minInclusive 0.0 ;
+        sh:name "holding market value" ;
+        sh:severity sh:Violation ;
+    ] .
