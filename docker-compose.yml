@@ -1,0 +1,288 @@
+services:
+  # --- DATABASE ---
+  postgres:
+    image: postgres:16-alpine
+    container_name: wealthos-postgres
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-wealthos}
+      POSTGRES_USER: ${POSTGRES_USER:-wealthos_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-wealthos_secure_dev_pass_2026!}
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-wealthos_user} -d ${POSTGRES_DB:-wealthos}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - wealthos-net
+
+  # PostgreSQL GUI: pgAdmin
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: wealthos-pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@wealthos.local}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-wealthos_admin_pass}
+    ports:
+      - "5050:80"
+    depends_on:
+      - postgres
+    networks:
+      - wealthos-net
+
+  # --- CACHE & RATE LIMITING ---
+  redis:
+    image: redis:7-alpine
+    container_name: wealthos-redis
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli ping | grep PONG"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - wealthos-net
+
+  # Redis GUI: RedisInsight
+  redisinsight:
+    image: redis/redisinsight:latest
+    container_name: wealthos-redisinsight
+    ports:
+      - "5540:5540"
+    volumes:
+      - redisinsight_data:/data
+    depends_on:
+      - redis
+    networks:
+      - wealthos-net
+
+  # --- ASYNC MESSAGING (RabbitMQ) ---
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: wealthos-rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-guest}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASS:-guest}
+    ports:
+      - "${RABBITMQ_PORT:-5672}:5672"     # AMQP protocol
+      - "15672:15672"                     # Management Web UI
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - wealthos-net
+
+  # --- EVENT STREAMING (Apache Kafka & Zookeeper) ---
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.6.0
+    container_name: wealthos-zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+      KAFKA_LOG4J_ROOT_LOGLEVEL: WARN
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z 127.0.0.1 2181 || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - wealthos-net
+
+  kafka:
+    image: confluentinc/cp-kafka:7.6.0
+    container_name: wealthos-kafka
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_ZOOKEEPER_CONNECTION_TIMEOUT_MS: 30000
+      KAFKA_ZOOKEEPER_SESSION_TIMEOUT_MS: 30000
+      KAFKA_LOG4J_ROOT_LOGLEVEL: WARN
+      KAFKA_LOG4J_LOGGERS: "org.apache.kafka=WARN,org.apache.zookeeper=WARN,state.change.logger=WARN,kafka=WARN,kafka.controller=WARN,kafka.cluster=WARN,kafka.log=WARN,kafka.server=WARN,kafka.network=WARN"
+    restart: on-failure
+    depends_on:
+      zookeeper:
+        condition: service_healthy
+    networks:
+      - wealthos-net
+
+  # --- FASTAPI AI & SEMANTIC KNOWLEDGE GRAPH MICROSERVICE ---
+  ai-service:
+    build:
+      context: ./fastapi
+      dockerfile: Dockerfile
+    container_name: wealthos-ai
+    environment:
+      WEALTHOS_BACKEND_URL: http://backend:8080
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      DB_HOST: postgres
+      DB_PORT: 5432
+      POSTGRES_DB: ${POSTGRES_DB:-wealthos}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-wealthos_secure_dev_pass_2026!}
+      SMTP_HOST: ${SMTP_HOST:-smtp.gmail.com}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER:-alerts@wealthos.local}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      SMTP_FROM: ${SMTP_FROM:-alerts@wealthos.local}
+      JWT_SECRET: ${JWT_SECRET}
+      TRADING212_API_KEY: ${TRADING212_API_KEY}
+      COINGECKO_API_KEY: ${COINGECKO_API_KEY}
+      FINNHUB_API_KEY: ${FINNHUB_API_KEY}
+      FRED_API_KEY: ${FRED_API_KEY}
+      ALPHA_VANTAGE_API_KEY: ${ALPHA_VANTAGE_API_KEY}
+      GOOGLE_SENTINEL_WEBHOOK_URL: ${GOOGLE_SENTINEL_WEBHOOK_URL}
+      RUST_MONTECARLO_URL: http://montecarlo-rust:9000
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./fastapi:/app
+    depends_on:
+      - backend
+      - redis
+    networks:
+      - wealthos-net
+
+  # --- APPLICATION BACKEND (Spring Boot 3 Modular Monolith) ---
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: wealthos-backend
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      DB_HOST: postgres
+      DB_PORT: 5432
+      POSTGRES_DB: ${POSTGRES_DB:-wealthos}
+      POSTGRES_USER: ${POSTGRES_USER:-wealthos_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-wealthos_secure_dev_pass_2026!}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USER: ${RABBITMQ_USER:-guest}
+      RABBITMQ_PASS: ${RABBITMQ_PASS:-guest}
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      JWT_SECRET: ${JWT_SECRET}
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      kafka:
+        condition: service_started
+    networks:
+      - wealthos-net
+
+  # --- APPLICATION FRONTEND (React 18 + TS + Tailwind + Vite) ---
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: wealthos-frontend
+    ports:
+      - "3000:80"
+    volumes:
+      - ./frontend/dist:/usr/share/nginx/html:ro
+    depends_on:
+      - backend
+    networks:
+      - wealthos-net
+
+  # --- REVERSE PROXY GATEWAY (NGINX) ---
+  nginx:
+    image: nginx:alpine
+    container_name: wealthos-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./nginx/proxy_common.conf:/etc/nginx/proxy_common.conf:ro
+      - ./nginx/certs:/etc/nginx/certs:ro
+    depends_on:
+      - backend
+      - frontend
+      - ai-service
+    networks:
+      - wealthos-net
+
+  # --- METRICS & OBSERVABILITY ---
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: wealthos-prometheus
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    ports:
+      - "9090:9090"
+    depends_on:
+      - backend
+    networks:
+      - wealthos-net
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: wealthos-grafana
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin_pass
+    ports:
+      - "3001:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+    depends_on:
+      - prometheus
+  # --- HIGH-PERFORMANCE MONTE CARLO SIMULATION (Rust + Axum + Rayon) ---
+  montecarlo-rust:
+    build:
+      context: ./rust-montecarlo
+      dockerfile: Dockerfile
+    container_name: wealthos-montecarlo
+    ports:
+      - "9000:9000"
+    restart: unless-stopped
+    networks:
+      - wealthos-net
+
+  # Distributed Tracing: Jaeger
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    container_name: wealthos-jaeger
+    ports:
+      - "16686:16686" # Web UI
+      - "4317:4317"   # OTLP gRPC
+      - "4318:4318"   # OTLP HTTP
+    networks:
+      - wealthos-net
+
+volumes:
+  postgres_data:
+  redis_data:
+  redisinsight_data:
+  rabbitmq_data:
+  grafana_data:
+
+networks:
+  wealthos-net:
+    driver: bridge
