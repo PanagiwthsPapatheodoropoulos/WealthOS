@@ -170,6 +170,8 @@ class EODPortfolioValuationDAG:
         print(f"[{cls.DAG_ID}] Task 4: Persisted {count} portfolio performance snapshots.")
         return summary
 
+    task_persist_eod_snapshots = task_persist_snapshots
+
     @classmethod
     def run(cls) -> Dict[str, Any]:
         print(f"--- Starting DAG: {cls.DAG_ID} ---")

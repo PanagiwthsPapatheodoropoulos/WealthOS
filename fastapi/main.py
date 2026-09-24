@@ -11,7 +11,7 @@ import asyncio
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from routers import analytics, ai, knowledge_graph, market, tax, optimizer, dividends, filings, macro, integrations
+from routers import analytics, ai, knowledge_graph, market, tax, optimizer, dividends, filings, macro, integrations, dags
 from services.http_client import close_http_client
 from services.alert_monitor import price_alert_monitor_loop
 
@@ -99,6 +99,10 @@ app.include_router(analytics.router, prefix="/api/ai/analytics", tags=["Risk Ana
 # Semantic Knowledge Graph & SPARQL
 app.include_router(knowledge_graph.router, prefix="/api/v1/ai/knowledge-graph", tags=["Knowledge Graph & SPARQL"])
 app.include_router(knowledge_graph.router, prefix="/api/ai/knowledge-graph", tags=["Knowledge Graph & SPARQL"])
+
+# Apache Airflow & Data Engineering Batch Pipelines
+app.include_router(dags.router, prefix="/api/v1/dags", tags=["Airflow Pipelines v1"])
+app.include_router(dags.router, prefix="/api/dags", tags=["Airflow Pipelines"])
 
 @app.get("/health")
 def health_check():
