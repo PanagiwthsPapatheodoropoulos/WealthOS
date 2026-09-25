@@ -64,3 +64,9 @@ test.txt
 context.txt
 scratch/
 *.log
+
+# Apache Airflow
+airflow/logs/*
+!airflow/logs/.gitkeep
+airflow/*.cfg
+airflow/*.db
