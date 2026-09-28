@@ -5,14 +5,14 @@ services:
     container_name: wealthos-postgres
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-wealthos}
-      POSTGRES_USER: ${POSTGRES_USER:-wealthos_user}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-wealthos_secure_dev_pass_2026!}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     ports:
-      - "${DB_PORT:-5432}:5432"
+      - "${POSTGRES_PORT:-5433}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-wealthos_user} -d ${POSTGRES_DB:-wealthos}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-wealthos}"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -25,7 +25,7 @@ services:
     container_name: wealthos-pgadmin
     environment:
       PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@wealthos.local}
-      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-wealthos_admin_pass}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD}
     ports:
       - "5050:80"
     depends_on:
@@ -135,7 +135,7 @@ services:
       DB_PORT: 5432
       POSTGRES_DB: ${POSTGRES_DB:-wealthos}
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-wealthos_secure_dev_pass_2026!}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       SMTP_HOST: ${SMTP_HOST:-smtp.gmail.com}
       SMTP_PORT: ${SMTP_PORT:-587}
       SMTP_USER: ${SMTP_USER:-alerts@wealthos.local}
@@ -170,14 +170,14 @@ services:
       DB_HOST: postgres
       DB_PORT: 5432
       POSTGRES_DB: ${POSTGRES_DB:-wealthos}
-      POSTGRES_USER: ${POSTGRES_USER:-wealthos_user}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-wealthos_secure_dev_pass_2026!}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       REDIS_HOST: redis
       REDIS_PORT: 6379
       RABBITMQ_HOST: rabbitmq
       RABBITMQ_PORT: 5672
       RABBITMQ_USER: ${RABBITMQ_USER:-guest}
-      RABBITMQ_PASS: ${RABBITMQ_PASS:-guest}
+      RABBITMQ_PASS: ${RABBITMQ_PASS}
       KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       JWT_SECRET: ${JWT_SECRET}
     ports:
@@ -273,6 +273,90 @@ services:
       - "16686:16686" # Web UI
       - "4317:4317"   # OTLP gRPC
       - "4318:4318"   # OTLP HTTP
+    networks:
+      - wealthos-net
+
+  # --- APACHE AIRFLOW 2.9 (Data Engineering & Pipeline Orchestrator) ---
+  airflow-init:
+    image: apache/airflow:2.9.1
+    container_name: wealthos-airflow-init
+    entrypoint: [/opt/airflow/scripts/init_airflow.sh]
+    environment:
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/airflow
+      AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB:-wealthos}
+      AIRFLOW_ADMIN_USER: ${AIRFLOW_ADMIN_USER:-admin}
+      AIRFLOW_ADMIN_PASSWORD: ${AIRFLOW_ADMIN_PASSWORD}
+      AIRFLOW_ADMIN_EMAIL: ${AIRFLOW_ADMIN_EMAIL:-admin@wealthos.local}
+      AIRFLOW_ADMIN_FIRSTNAME: ${AIRFLOW_ADMIN_FIRSTNAME:-WealthOS}
+      AIRFLOW_ADMIN_LASTNAME: ${AIRFLOW_ADMIN_LASTNAME:-Admin}
+    volumes:
+      - ./airflow/scripts:/opt/airflow/scripts:ro
+      - ./airflow/logs:/opt/airflow/logs
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - wealthos-net
+
+  airflow-webserver:
+    image: apache/airflow:2.9.1
+    container_name: wealthos-airflow-webserver
+    command: webserver
+    environment:
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/airflow
+      AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
+      AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: 'false'
+      AIRFLOW__WEBSERVER__EXPOSE_CONFIG: 'true'
+      AIRFLOW__WEBSERVER__SECRET_KEY: ${AIRFLOW_SECRET_KEY}
+      AIRFLOW__API__AUTH_BACKENDS: 'airflow.api.auth.backend.basic_auth,airflow.api.auth.backend.session'
+      AIRFLOW__CORE__ENABLE_XCOM_PICKLING: 'true'
+      WEALTHOS_API_URL: http://ai-service:8000
+      BACKEND_API_URL: http://backend:8080
+    ports:
+      - "${AIRFLOW_WEBSERVER_PORT:-8085}:8080"
+    volumes:
+      - ./airflow/dags:/opt/airflow/dags
+      - ./airflow/logs:/opt/airflow/logs
+      - ./airflow/plugins:/opt/airflow/plugins
+    restart: unless-stopped
+    depends_on:
+      airflow-init:
+        condition: service_completed_successfully
+      ai-service:
+        condition: service_started
+    networks:
+      - wealthos-net
+
+  airflow-scheduler:
+    image: apache/airflow:2.9.1
+    container_name: wealthos-airflow-scheduler
+    command: scheduler
+    environment:
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/airflow
+      AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
+      AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: 'false'
+      AIRFLOW__API__AUTH_BACKENDS: 'airflow.api.auth.backend.basic_auth,airflow.api.auth.backend.session'
+      AIRFLOW__CORE__ENABLE_XCOM_PICKLING: 'true'
+      WEALTHOS_API_URL: http://ai-service:8000
+      BACKEND_API_URL: http://backend:8080
+    volumes:
+      - ./airflow/dags:/opt/airflow/dags
+      - ./airflow/logs:/opt/airflow/logs
+      - ./airflow/plugins:/opt/airflow/plugins
+    restart: unless-stopped
+    depends_on:
+      airflow-init:
+        condition: service_completed_successfully
+      ai-service:
+        condition: service_started
     networks:
       - wealthos-net
 
