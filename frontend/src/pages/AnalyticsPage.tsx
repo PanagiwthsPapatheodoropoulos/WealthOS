@@ -388,68 +388,97 @@ export function AnalyticsPage() {
           <h1 className="text-2xl font-black text-zinc-900 mt-1 tracking-tight">Portfolio Intelligence</h1>
         </div>
 
-        {/* 6 Tab Reorganized Navigation by Priority */}
-        <div className="flex flex-wrap items-center gap-1 rounded-2xl border border-zinc-200 bg-zinc-100/80 p-1 shadow-xs">
-          <button
-            onClick={() => setActiveTab('dca_inflows')}
-            className={`flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-bold transition-all ${
-              activeTab === 'dca_inflows' ? 'bg-white text-zinc-900 shadow-xs' : 'text-zinc-500 hover:text-zinc-900'
-            }`}
+        {/* Airflow 2.9 Medallion Pipeline Telemetry */}
+        <div className="flex items-center gap-2 rounded-xl border border-zinc-200 bg-white px-3 py-1.5 shadow-2xs">
+          <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+          <div className="flex flex-col">
+            <div className="flex items-center gap-1.5">
+              <span className="font-mono text-[11px] font-bold text-zinc-800">Airflow 2.9 ETL</span>
+              <span className="text-[9px] font-mono font-bold uppercase tracking-wider text-emerald-700 bg-emerald-50 border border-emerald-200 px-1 py-0.2 rounded">
+                Active
+              </span>
+            </div>
+            <div className="flex items-center gap-1 font-mono text-[9px] text-zinc-500 mt-0.5">
+              <span className="px-1 rounded bg-amber-50 text-amber-900 border border-amber-200 font-bold">Bronze</span>
+              <span className="text-zinc-300">›</span>
+              <span className="px-1 rounded bg-slate-100 text-slate-800 border border-slate-200 font-bold">Silver</span>
+              <span className="text-zinc-300">›</span>
+              <span className="px-1 rounded bg-yellow-50 text-yellow-900 border border-yellow-300 font-bold">Gold</span>
+            </div>
+          </div>
+          <a
+            href="http://localhost:8085"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="ml-1 rounded-lg border border-zinc-200 bg-zinc-50 p-1.5 text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100 transition-all cursor-pointer"
+            title="Open Apache Airflow Web UI (Port 8085)"
           >
-            <Wallet className="h-3.5 w-3.5 text-emerald-600" />
-            Capital DCA & Inflows
-          </button>
-
-          <button
-            onClick={() => setActiveTab('risk_macro')}
-            className={`flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-bold transition-all ${
-              activeTab === 'risk_macro' ? 'bg-white text-zinc-900 shadow-xs' : 'text-zinc-500 hover:text-zinc-900'
-            }`}
-          >
-            <BarChart3 className="h-3.5 w-3.5 text-violet-600" />
-            Risk & Purchasing Power
-          </button>
-
-          <button
-            onClick={() => setActiveTab('macro_suite')}
-            className={`flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-bold transition-all ${
-              activeTab === 'macro_suite' ? 'bg-white text-zinc-900 shadow-xs' : 'text-zinc-500 hover:text-zinc-900'
-            }`}
-          >
-            <Globe2 className="h-3.5 w-3.5 text-blue-600" />
-            Macro Intelligence
-          </button>
-
-          <button
-            onClick={() => setActiveTab('greek_tax')}
-            className={`flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-bold transition-all ${
-              activeTab === 'greek_tax' ? 'bg-white text-zinc-900 shadow-xs' : 'text-zinc-500 hover:text-zinc-900'
-            }`}
-          >
-            <ShieldCheck className="h-3.5 w-3.5 text-emerald-600" />
-            Greek & EU Tax Cockpit
-          </button>
-
-          <button
-            onClick={() => setActiveTab('optimizer')}
-            className={`flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-bold transition-all ${
-              activeTab === 'optimizer' ? 'bg-white text-zinc-900 shadow-xs' : 'text-zinc-500 hover:text-zinc-900'
-            }`}
-          >
-            <Scale className="h-3.5 w-3.5 text-indigo-600" />
-            Markowitz Optimizer
-          </button>
-
-          <button
-            onClick={() => setActiveTab('dividends')}
-            className={`flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-bold transition-all ${
-              activeTab === 'dividends' ? 'bg-white text-zinc-900 shadow-xs' : 'text-zinc-500 hover:text-zinc-900'
-            }`}
-          >
-            <Calendar className="h-3.5 w-3.5 text-amber-600" />
-            Dividend Runway
-          </button>
+            <ArrowUpRight className="h-3.5 w-3.5" />
+          </a>
         </div>
+      </div>
+
+      {/* 6 Tab Reorganized Navigation by Priority */}
+      <div className="flex flex-wrap items-center gap-1 rounded-2xl border border-zinc-200 bg-zinc-100/80 p-1 shadow-xs">
+        <button
+          onClick={() => setActiveTab('dca_inflows')}
+          className={`flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-bold transition-all ${
+            activeTab === 'dca_inflows' ? 'bg-white text-zinc-900 shadow-xs' : 'text-zinc-500 hover:text-zinc-900'
+          }`}
+        >
+          <Wallet className="h-3.5 w-3.5 text-emerald-600" />
+          Capital DCA & Inflows
+        </button>
+
+        <button
+          onClick={() => setActiveTab('risk_macro')}
+          className={`flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-bold transition-all ${
+            activeTab === 'risk_macro' ? 'bg-white text-zinc-900 shadow-xs' : 'text-zinc-500 hover:text-zinc-900'
+          }`}
+        >
+          <BarChart3 className="h-3.5 w-3.5 text-violet-600" />
+          Risk & Purchasing Power
+        </button>
+
+        <button
+          onClick={() => setActiveTab('macro_suite')}
+          className={`flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-bold transition-all ${
+            activeTab === 'macro_suite' ? 'bg-white text-zinc-900 shadow-xs' : 'text-zinc-500 hover:text-zinc-900'
+          }`}
+        >
+          <Globe2 className="h-3.5 w-3.5 text-blue-600" />
+          Macro Intelligence
+        </button>
+
+        <button
+          onClick={() => setActiveTab('greek_tax')}
+          className={`flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-bold transition-all ${
+            activeTab === 'greek_tax' ? 'bg-white text-zinc-900 shadow-xs' : 'text-zinc-500 hover:text-zinc-900'
+          }`}
+        >
+          <ShieldCheck className="h-3.5 w-3.5 text-emerald-600" />
+          Greek & EU Tax Cockpit
+        </button>
+
+        <button
+          onClick={() => setActiveTab('optimizer')}
+          className={`flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-bold transition-all ${
+            activeTab === 'optimizer' ? 'bg-white text-zinc-900 shadow-xs' : 'text-zinc-500 hover:text-zinc-900'
+          }`}
+        >
+          <Scale className="h-3.5 w-3.5 text-indigo-600" />
+          Markowitz Optimizer
+        </button>
+
+        <button
+          onClick={() => setActiveTab('dividends')}
+          className={`flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-bold transition-all ${
+            activeTab === 'dividends' ? 'bg-white text-zinc-900 shadow-xs' : 'text-zinc-500 hover:text-zinc-900'
+          }`}
+        >
+          <Calendar className="h-3.5 w-3.5 text-amber-600" />
+          Dividend Runway
+        </button>
       </div>
 
       {/* Top Vital Signs Bar (Executive Summary - What Matters Most) */}
@@ -2193,6 +2222,27 @@ export function AnalyticsPage() {
       {/* TAB 4: RISK & REAL PURCHASING POWER */}
       {activeTab === 'risk_macro' && (
         <div className="space-y-6">
+          {/* Airflow Quantitative Pipeline Provenance */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 rounded-xl border border-zinc-200 bg-zinc-50/70 px-4 py-2.5 text-xs">
+            <div className="flex items-center gap-2">
+              <ShieldAlert className="h-4 w-4 text-purple-600 shrink-0" />
+              <span className="font-semibold text-zinc-800">
+                Orchestrated via Apache Airflow Risk Engine (DAG 03)
+              </span>
+              <span className="hidden sm:inline text-zinc-400">•</span>
+              <span className="hidden sm:inline text-zinc-500">
+                Monte Carlo VaR 95/99%, Expected Shortfall (CVaR), and Macro Stress Testing
+              </span>
+            </div>
+            <div className="flex items-center gap-1 font-mono text-[10px]">
+              <span className="px-1.5 py-0.5 rounded bg-amber-100 text-amber-900 border border-amber-300 font-bold">Bronze Extract</span>
+              <span className="text-zinc-300">›</span>
+              <span className="px-1.5 py-0.5 rounded bg-slate-200 text-slate-800 border border-slate-300 font-bold">Silver Modeling</span>
+              <span className="text-zinc-300">›</span>
+              <span className="px-1.5 py-0.5 rounded bg-yellow-200 text-yellow-900 border border-yellow-400 font-bold">Gold Alerts</span>
+            </div>
+          </div>
+
           {/* Top Risk Diagnostics KPI Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-xs">
@@ -2848,7 +2898,6 @@ export function AnalyticsPage() {
           </div>
         </div>
       )}
-
 
     </div>
   )
