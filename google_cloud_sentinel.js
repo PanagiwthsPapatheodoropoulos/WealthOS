@@ -1,9 +1,6 @@
 /**
- * WealthOS 24/7 Autonomous Cloud Sentinel (Zero-Defaults • 100% Dynamic)
- * =====================================================================
- * 100% Free • No Credit Card • Zero Hardcoded Assets
- * 
- * Takes dynamically ONLY what you arm in your WealthOS Terminal.
+ * WealthOS Cloud Sentinel (Google Apps Script Runtime)
+ * Autonomous market surveillance and price alert notification engine.
  */
 
 function getScriptRecipientEmail() {
@@ -17,194 +14,238 @@ function getScriptRecipientEmail() {
   return "";
 }
 
+/**
+ * Evaluates configured price alerts with an execution time guard.
+ */
 function checkPriceAlerts() {
-  const props = PropertiesService.getScriptProperties();
+  const startTime = new Date().getTime();
+  const MAX_RUNTIME_MS = 45000;
+
+  let props;
+  try {
+    props = PropertiesService.getScriptProperties();
+  } catch (e) {
+    Logger.log("PropertiesService error: " + e.toString());
+    return;
+  }
+
   const alertsJson = props.getProperty("WEALTHOS_ALERTS");
   if (!alertsJson) return;
 
-  const alerts = JSON.parse(alertsJson);
+  let alerts = [];
+  try {
+    alerts = JSON.parse(alertsJson);
+  } catch (e) {
+    Logger.log("JSON parse error: " + e.toString());
+    return;
+  }
+
   if (!Array.isArray(alerts) || alerts.length === 0) return;
 
   const recipient = props.getProperty("RECIPIENT_EMAIL") || getScriptRecipientEmail();
+  if (!recipient) return;
 
-  alerts.forEach(alert => {
+  for (let i = 0; i < alerts.length; i++) {
+    if (new Date().getTime() - startTime > MAX_RUNTIME_MS) {
+      Logger.log("Execution time limit reached, completing batch.");
+      break;
+    }
+
+    const alert = alerts[i];
     try {
       const livePrice = fetchLivePrice(alert.symbol);
-      if (!livePrice || livePrice <= 0) return;
+      if (!livePrice || livePrice <= 0) continue;
 
-      const alertKey = 'triggered_' + (alert.id || alert.symbol) + '_' + alert.condition + '_' + alert.targetPrice;
-      const isAlreadyTriggered = props.getProperty(alertKey) === 'true';
+      const alertKey = "triggered_" + (alert.id || alert.symbol) + "_" + alert.condition + "_" + alert.targetPrice;
+      const isAlreadyTriggered = props.getProperty(alertKey) === "true";
 
-      const cond = (alert.condition || 'ABOVE').toUpperCase();
+      const cond = (alert.condition || "ABOVE").toUpperCase();
       let triggered = false;
-      if (cond === 'ABOVE' && livePrice >= alert.targetPrice) {
+      if (cond === "ABOVE" && livePrice >= alert.targetPrice) {
         triggered = true;
-      } else if (cond === 'BELOW' && livePrice <= alert.targetPrice) {
+      } else if (cond === "BELOW" && livePrice <= alert.targetPrice) {
         triggered = true;
       }
 
       if (triggered && !isAlreadyTriggered) {
         sendInstitutionalAlertEmail(alert, livePrice, recipient);
-        props.setProperty(alertKey, 'true');
-        Logger.log('[ALERT TRIGGERED] ' + alert.symbol + ' reached ' + livePrice);
+        props.setProperty(alertKey, "true");
+        Logger.log("[TRIGGERED] " + alert.symbol + " reached " + livePrice);
       } else if (!triggered && isAlreadyTriggered) {
         props.deleteProperty(alertKey);
       }
     } catch (err) {
-      Logger.log('Error checking alert for ' + alert.symbol + ': ' + err.toString());
+      Logger.log("Error evaluating " + alert.symbol + ": " + err.toString());
     }
-  });
-}
-
-function fetchLivePrice(symbol) {
-  try {
-    const cleanSym = encodeURIComponent(symbol.trim());
-    const url = 'https://query1.finance.yahoo.com/v8/finance/chart/' + cleanSym + '?interval=1m&range=1d';
-    const res = UrlFetchApp.fetch(url, {
-      muteHttpExceptions: true,
-      headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)' }
-    });
-
-    if (res.getResponseCode() !== 200) return null;
-    const json = JSON.parse(res.getContentText());
-    const price = json?.chart?.result?.[0]?.meta?.regularMarketPrice;
-    return price ? Number(price) : null;
-  } catch (err) {
-    Logger.log('Failed to fetch quote for ' + symbol + ': ' + err.toString());
-    return null;
   }
 }
 
+/**
+ * Fetches market price with dual endpoint failover.
+ */
+function fetchLivePrice(symbol) {
+  if (!symbol) return null;
+  const cleanSym = encodeURIComponent(symbol.toString().trim());
+
+  const endpoints = [
+    "https://query1.finance.yahoo.com/v8/finance/chart/" + cleanSym + "?interval=1m&range=1d",
+    "https://query2.finance.yahoo.com/v8/finance/chart/" + cleanSym + "?interval=1m&range=1d"
+  ];
+
+  for (let i = 0; i < endpoints.length; i++) {
+    try {
+      const res = UrlFetchApp.fetch(endpoints[i], {
+        muteHttpExceptions: true,
+        validateHttpsCertificates: true,
+        headers: {
+          "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+          "Accept": "application/json"
+        }
+      });
+
+      if (res.getResponseCode() === 200) {
+        const json = JSON.parse(res.getContentText());
+        const price = json?.chart?.result?.[0]?.meta?.regularMarketPrice;
+        if (price && !isNaN(price)) {
+          return Number(price);
+        }
+      }
+    } catch (err) {
+      Logger.log("Fetch failed for " + symbol + " on endpoint " + (i + 1) + ": " + err.toString());
+    }
+  }
+  return null;
+}
+
+/**
+ * Handles incoming webhooks from backend services.
+ */
 function doPost(e) {
   try {
     const raw = e?.postData?.contents;
-    if (!raw) return jsonResponse({ status: 'error', message: 'Empty payload' });
+    if (!raw) return jsonResponse({ status: "error", message: "Empty payload" });
 
     const data = JSON.parse(raw);
     const props = PropertiesService.getScriptProperties();
 
-    // 1. Direct Email Dispatch from WealthOS
-    if (data.action === 'DISPATCH_EMAIL') {
-      const to = data.recipientEmail || props.getProperty('RECIPIENT_EMAIL') || getScriptRecipientEmail();
+    if (data.action === "DISPATCH_EMAIL") {
+      const to = data.recipientEmail || props.getProperty("RECIPIENT_EMAIL") || getScriptRecipientEmail();
       MailApp.sendEmail({
         to: to,
-        subject: data.subject || '[WealthOS Alert]',
-        htmlBody: data.htmlBody || '<p>Alert triggered</p>'
+        subject: data.subject || "[WealthOS Alert]",
+        htmlBody: data.htmlBody || "<p>Alert triggered</p>"
       });
       return jsonResponse({
-        status: 'success',
-        message: 'Email dispatched via MailApp',
+        status: "success",
+        message: "Email dispatched",
         deliveredTo: to,
         timestamp: new Date().toISOString()
       });
     }
 
-    // 2. Instant Test Email
-    if (data.action === 'TEST_EMAIL') {
-      const to = data.recipientEmail || props.getProperty('RECIPIENT_EMAIL') || getScriptRecipientEmail();
+    if (data.action === "TEST_EMAIL") {
+      const to = data.recipientEmail || props.getProperty("RECIPIENT_EMAIL") || getScriptRecipientEmail();
       sendTestEmailTo(to);
       return jsonResponse({
-        status: 'success',
-        message: 'Test email dispatched',
+        status: "success",
+        message: "Test email dispatched",
         deliveredTo: to,
         timestamp: new Date().toISOString()
       });
     }
 
-    // 3. Immediate Price Check & Trigger Evaluation
-    if (data.action === 'CHECK_NOW') {
-      const evalResult = checkPriceAlerts();
+    if (data.action === "CHECK_NOW") {
+      checkPriceAlerts();
       return jsonResponse({
-        status: 'success',
-        action: 'checked',
-        result: evalResult,
+        status: "success",
+        action: "checked",
         timestamp: new Date().toISOString()
       });
     }
 
-    // 4. Sync Alerts from WealthOS PostgreSQL
-    if (data.action === 'SYNC_ALERTS' && Array.isArray(data.alerts)) {
-      props.setProperty('WEALTHOS_ALERTS', JSON.stringify(data.alerts));
-      if (data.recipientEmail) props.setProperty('RECIPIENT_EMAIL', data.recipientEmail);
-      
-      // Immediately run check on synced alerts
-      const evalResult = checkPriceAlerts();
-
+    if (data.action === "SYNC_ALERTS" && Array.isArray(data.alerts)) {
+      props.setProperty("WEALTHOS_ALERTS", JSON.stringify(data.alerts));
+      if (data.recipientEmail) {
+        props.setProperty("RECIPIENT_EMAIL", data.recipientEmail);
+      }
+      checkPriceAlerts();
       return jsonResponse({
-        status: 'success',
+        status: "success",
         activeCount: data.alerts.length,
-        evaluated: evalResult,
-        recipient: data.recipientEmail || props.getProperty('RECIPIENT_EMAIL') || getScriptRecipientEmail(),
+        recipient: data.recipientEmail || props.getProperty("RECIPIENT_EMAIL") || getScriptRecipientEmail(),
         timestamp: new Date().toISOString()
       });
     }
 
-    // 5. Direct Email Recipient Update
-    if (data.action === 'SET_RECIPIENT_EMAIL' && data.recipientEmail) {
-      props.setProperty('RECIPIENT_EMAIL', data.recipientEmail);
+    if (data.action === "SET_RECIPIENT_EMAIL" && data.recipientEmail) {
+      props.setProperty("RECIPIENT_EMAIL", data.recipientEmail);
       return jsonResponse({
-        status: 'success',
-        message: 'Recipient email updated successfully to ' + data.recipientEmail,
+        status: "success",
+        message: "Recipient email updated",
         recipient: data.recipientEmail,
         timestamp: new Date().toISOString()
       });
     }
 
-    return jsonResponse({ status: 'ignored', receivedAction: data.action });
+    return jsonResponse({ status: "ignored", receivedAction: data.action });
   } catch (err) {
-    return jsonResponse({ status: 'error', message: err.toString() });
+    return jsonResponse({ status: "error", message: err.toString() });
   }
 }
 
+/**
+ * Resolves currency symbol from asset metadata or ticker suffix.
+ */
 function resolveSentinelCurrencySymbol(currency, symbol) {
   if (currency) {
     const c = currency.toString().toUpperCase().trim();
-    if (c === 'EUR') return '€';
-    if (c === 'GBP') return '£';
-    if (c === 'USD') return '$';
-    if (c === 'CHF') return 'CHF ';
-    if (c === 'JPY') return '¥';
-    if (c === 'CAD') return 'CA$';
-    if (c === 'AUD') return 'AU$';
-    return c + ' ';
+    if (c === "EUR") return "€";
+    if (c === "GBP") return "£";
+    if (c === "USD") return "$";
+    if (c === "CHF") return "CHF ";
+    if (c === "JPY") return "¥";
+    if (c === "CAD") return "CA$";
+    if (c === "AUD") return "AU$";
+    return c + " ";
   }
-  const s = (symbol || '').toString().toUpperCase().trim();
-  const euroSuffixes = ['.MI', '.DE', '.F', '.MU', '.PA', '.AS', '.BR', '.MC', '.AT', '.VI', '.HE', '.IR'];
+  const s = (symbol || "").toString().toUpperCase().trim();
+  const euroSuffixes = [".MI", ".DE", ".F", ".MU", ".PA", ".AS", ".BR", ".MC", ".AT", ".VI", ".HE", ".IR"];
   for (let i = 0; i < euroSuffixes.length; i++) {
-    if (s.endsWith(euroSuffixes[i])) return '€';
+    if (s.endsWith(euroSuffixes[i])) return "€";
   }
-  if (s.endsWith('.L') || s.endsWith('.IL')) return '£';
-  if (s.endsWith('.SW') || s.endsWith('.VX')) return 'CHF ';
-  if (s.endsWith('.T')) return '¥';
-  if (s.endsWith('.TO') || s.endsWith('.V')) return 'CA$';
-  if (s.endsWith('.AX')) return 'AU$';
-  if (s.endsWith('-EUR')) return '€';
-  if (s.endsWith('-GBP')) return '£';
-  return '$';
+  if (s.endsWith(".L") || s.endsWith(".IL")) return "£";
+  if (s.endsWith(".SW") || s.endsWith(".VX")) return "CHF ";
+  if (s.endsWith(".T")) return "¥";
+  if (s.endsWith(".TO") || s.endsWith(".V")) return "CA$";
+  if (s.endsWith(".AX")) return "AU$";
+  if (s.endsWith("-EUR")) return "€";
+  if (s.endsWith("-GBP")) return "£";
+  return "$";
 }
 
+/**
+ * Health check and manual trigger GET endpoint.
+ */
 function doGet(e) {
   const props = PropertiesService.getScriptProperties();
-  const alertsJson = props.getProperty('WEALTHOS_ALERTS');
+  const alertsJson = props.getProperty("WEALTHOS_ALERTS");
   const alerts = alertsJson ? JSON.parse(alertsJson) : [];
-  const recipient = props.getProperty('RECIPIENT_EMAIL') || getScriptRecipientEmail();
+  const recipient = props.getProperty("RECIPIENT_EMAIL") || getScriptRecipientEmail();
 
-  // Support ?action=test in browser
-  if (e?.parameter?.action === 'test') {
+  if (e?.parameter?.action === "test") {
     sendTestEmailTo(recipient);
     return jsonResponse({
-      status: 'success',
-      message: 'Test alert email sent to ' + recipient,
+      status: "success",
+      message: "Test alert email sent to " + recipient,
       timestamp: new Date().toISOString()
     });
   }
 
-  // Support ?action=check in browser
-  if (e?.parameter?.action === 'check') {
-    const res = checkPriceAlerts();
+  if (e?.parameter?.action === "check") {
+    checkPriceAlerts();
     return jsonResponse({
-      status: 'success',
-      result: res,
+      status: "success",
+      message: "Price checks evaluated",
       timestamp: new Date().toISOString()
     });
   }
@@ -215,9 +256,9 @@ function doGet(e) {
   } catch (err) {}
 
   return jsonResponse({
-    status: 'online',
-    service: 'WealthOS 24/7 Dynamic Cloud Sentinel',
-    activeDynamicAlertsCount: alerts.length,
+    status: "online",
+    service: "WealthOS Cloud Sentinel",
+    activeAlertsCount: alerts.length,
     alerts: alerts,
     recipientEmail: recipient,
     remainingDailyEmailQuota: remainingQuota,
@@ -226,74 +267,105 @@ function doGet(e) {
 }
 
 function sendTestEmail() {
-  const props = PropertiesService.getScriptProperties();
-  const recipient = props.getProperty('RECIPIENT_EMAIL') || getScriptRecipientEmail();
+  const recipient = getScriptRecipientEmail();
   sendTestEmailTo(recipient);
 }
 
 function sendTestEmailTo(recipient) {
-  const html = '<div style="background-color: #f1f5f9; padding: 28px 16px; font-family: -apple-system, BlinkMacSystemFont, sans-serif;">' +
-    '<div style="max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 14px; overflow: hidden; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.08); border: 1px solid #e2e8f0;">' +
-    '<div style="background: #09090b; padding: 22px 28px; border-bottom: 2px solid #10b981;">' +
-    '<div style="color: #10b981; font-size: 11px; font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase;">WealthOS Cloud Sentinel</div>' +
-    '<h1 style="margin: 8px 0 0 0; color: #ffffff; font-size: 20px; font-weight: 800;">Surveillance Link Verified</h1>' +
-    '</div>' +
-    '<div style="padding: 26px 28px;">' +
-    '<p style="font-size: 13px; color: #475569; margin: 0 0 18px 0;">Your 24/7 real-time alert dispatch channel is armed and operational for <strong>' + recipient + '</strong>.</p>' +
-    '<div style="background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 12px; padding: 18px; margin-bottom: 20px;">' +
-    '<div style="font-size: 16px; font-weight: 800; color: #065f46;">✓ 100% Free Autonomous Monitoring Active</div>' +
-    '<div style="font-size: 12px; color: #047857; margin-top: 4px;">Sub-second triggers are configured. Alerts will arrive here immediately upon threshold breaches.</div>' +
-    '</div>' +
-    '</div>' +
-    '<div style="background: #f8fafc; border-top: 1px solid #e2e8f0; padding: 14px 28px; font-size: 11px; color: #64748b; text-align: center;">' +
-    'WealthOS Autonomous Cloud Sentinel • 100% Free Surveillance' +
-    '</div>' +
-    '</div>' +
-    '</div>';
+  const html = `
+    <div style="background-color: #f1f5f9; padding: 28px 16px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+      <div style="max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 14px; overflow: hidden; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.08); border: 1px solid #e2e8f0;">
+        <div style="background: #09090b; padding: 22px 28px; border-bottom: 2px solid #10b981;">
+          <div style="color: #10b981; font-size: 11px; font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase;">WealthOS Cloud Sentinel</div>
+          <h1 style="margin: 8px 0 0 0; color: #ffffff; font-size: 20px; font-weight: 800;">Surveillance Channel Verified</h1>
+        </div>
+        <div style="padding: 26px 28px;">
+          <p style="font-size: 13px; color: #475569; margin: 0 0 18px 0;">Alert dispatch channel confirmed for <strong>${recipient}</strong>.</p>
+          <div style="background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 12px; padding: 18px; margin-bottom: 20px;">
+            <div style="font-size: 15px; font-weight: 800; color: #065f46;">Real-Time Price Surveillance Armed</div>
+            <div style="font-size: 12px; color: #047857; margin-top: 4px;">Notifications will be dispatched automatically upon threshold cross.</div>
+          </div>
+        </div>
+        <div style="background: #f8fafc; border-top: 1px solid #e2e8f0; padding: 14px 28px; font-size: 11px; color: #64748b; text-align: center;">
+          WealthOS Autonomous Cloud Sentinel
+        </div>
+      </div>
+    </div>
+  `;
 
   MailApp.sendEmail({
     to: recipient,
-    subject: '[WealthOS Verified] 24/7 Autonomous Cloud Sentinel Armed',
+    subject: "[WealthOS] Cloud Sentinel Channel Verified",
     htmlBody: html
   });
-  Logger.log('Test email successfully sent to ' + recipient);
 }
 
 function sendInstitutionalAlertEmail(alert, livePrice, recipient) {
-  const isAbove = (alert.condition || 'ABOVE').toUpperCase() === 'ABOVE';
-  const badgeColor = isAbove ? '#10b981' : '#f43f5e';
-  const badgeBg = isAbove ? '#ecfdf5' : '#fff1f2';
-  const badgeBorder = isAbove ? '#a7f3d0' : '#fecdd3';
-  const conditionLabel = isAbove ? 'CROSSED ABOVE (>=)' : 'DROPPED BELOW (<=)';
+  const isAbove = (alert.condition || "ABOVE").toUpperCase() === "ABOVE";
+  const badgeColor = isAbove ? "#10b981" : "#f43f5e";
+  const badgeBg = isAbove ? "#ecfdf5" : "#fff1f2";
+  const badgeBorder = isAbove ? "#a7f3d0" : "#fecdd3";
+  const conditionLabel = isAbove ? "CROSSED ABOVE" : "DROPPED BELOW";
   
   const currSym = resolveSentinelCurrencySymbol(alert.currency, alert.symbol);
+  const nowUtc = new Date().toUTCString();
 
-  const subject = '[WealthOS Alert] ' + alert.symbol + ' ' + alert.condition + ' ' + currSym + Number(alert.targetPrice).toFixed(2) + ' (Live: ' + currSym + Number(livePrice).toFixed(2) + ')';
+  const subject = `[WealthOS Alert] ${alert.symbol} ${alert.condition} ${currSym}${Number(alert.targetPrice).toFixed(2)} (Live: ${currSym}${Number(livePrice).toFixed(2)})`;
 
-  const html = '<div style="background-color: #f1f5f9; padding: 28px 16px; font-family: -apple-system, BlinkMacSystemFont, sans-serif;">' +
-    '<div style="max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 14px; overflow: hidden; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.08); border: 1px solid #e2e8f0;">' +
-    '<div style="background: #09090b; padding: 22px 28px; border-bottom: 2px solid #10b981;">' +
-    '<div style="color: #10b981; font-size: 11px; font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase;">WealthOS 24/7 Cloud Sentinel</div>' +
-    '<h1 style="margin: 8px 0 0 0; color: #ffffff; font-size: 20px; font-weight: 800;">Target Price Condition Met</h1>' +
-    '</div>' +
-    '<div style="padding: 26px 28px;">' +
-    '<p style="font-size: 13px; color: #475569; margin: 0 0 18px 0;">Your price target armed in WealthOS has been reached:</p>' +
-    '<div style="background: ' + badgeBg + '; border: 1px solid ' + badgeBorder + '; border-radius: 12px; padding: 20px; margin-bottom: 22px;">' +
-    '<div style="font-size: 22px; font-weight: 800; color: #0f172a; font-family: monospace;">' + alert.symbol + '</div>' +
-    '<div style="font-size: 13px; color: #64748b; margin-top: 2px;">' + (alert.name || alert.symbol) + '</div>' +
-    '<div style="margin-top: 14px; padding-top: 12px; border-top: 1px dashed ' + badgeBorder + '; font-size: 14px;">' +
-    '<strong>Condition: </strong>' + conditionLabel + '<br/>' +
-    '<strong>Target Threshold: </strong>' + currSym + Number(alert.targetPrice).toFixed(2) + '<br/>' +
-    '<strong>Execution Price: </strong><span style="color: ' + badgeColor + '; font-weight: 800;">' + currSym + Number(livePrice).toFixed(2) + '</span>' +
-    '</div>' +
-    '</div>' +
-    '<p style="font-size: 12px; color: #64748b;">Log in to your WealthOS Terminal to review your positions.</p>' +
-    '</div>' +
-    '<div style="background: #f8fafc; border-top: 1px solid #e2e8f0; padding: 14px 28px; font-size: 11px; color: #64748b; text-align: center;">' +
-    'WealthOS Autonomous Cloud Sentinel • 100% Free 24/7 Surveillance' +
-    '</div>' +
-    '</div>' +
-    '</div>';
+  const html = `
+    <div style="background-color: #f1f5f9; padding: 28px 16px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+      <div style="max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 14px; overflow: hidden; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.08); border: 1px solid #e2e8f0;">
+        <div style="background: #09090b; padding: 22px 28px; border-bottom: 2px solid #10b981;">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div style="color: #10b981; font-size: 11px; font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase;">
+              WealthOS Cloud Sentinel
+            </div>
+            <div style="color: #a1a1aa; font-size: 10px; font-family: monospace;">
+              ${nowUtc}
+            </div>
+          </div>
+          <h1 style="margin: 8px 0 0 0; color: #ffffff; font-size: 20px; font-weight: 800;">
+            Price Threshold Reached
+          </h1>
+        </div>
+        <div style="padding: 26px 28px;">
+          <p style="font-size: 13px; color: #475569; margin: 0 0 18px 0;">
+            Target threshold condition met:
+          </p>
+          <div style="background: ${badgeBg}; border: 1px solid ${badgeBorder}; border-radius: 12px; padding: 20px; margin-bottom: 22px;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <div>
+                <span style="font-size: 22px; font-weight: 800; color: #0f172a; font-family: monospace;">${alert.symbol}</span>
+                <span style="font-size: 13px; color: #64748b; margin-left: 8px;">${alert.name || alert.symbol}</span>
+              </div>
+              <span style="display: inline-block; padding: 5px 12px; border-radius: 6px; font-size: 11px; font-weight: 800; background: #ffffff; color: ${badgeColor}; border: 1px solid ${badgeBorder};">
+                ${conditionLabel}
+              </span>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px; padding-top: 14px; border-top: 1px dashed ${badgeBorder};">
+              <div>
+                <div style="font-size: 10px; font-weight: 700; text-transform: uppercase; color: #64748b;">Target Threshold</div>
+                <div style="font-size: 18px; font-weight: 800; color: #0f172a; font-family: monospace;">${currSym}${Number(alert.targetPrice).toFixed(2)}</div>
+              </div>
+              <div>
+                <div style="font-size: 10px; font-weight: 700; text-transform: uppercase; color: #64748b;">Execution Price</div>
+                <div style="font-size: 18px; font-weight: 800; color: ${badgeColor}; font-family: monospace;">${currSym}${Number(livePrice).toFixed(2)}</div>
+              </div>
+            </div>
+          </div>
+          <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px 18px;">
+            <strong style="font-size: 12px; color: #0f172a;">Portfolio Surveillance</strong>
+            <p style="font-size: 12px; color: #475569; margin: 4px 0 0 0; line-height: 1.5;">
+              Log in to WealthOS to review allocation weights and execute orders.
+            </p>
+          </div>
+        </div>
+        <div style="background: #f8fafc; border-top: 1px solid #e2e8f0; padding: 14px 28px; font-size: 11px; color: #64748b; text-align: center;">
+          WealthOS Autonomous Cloud Sentinel
+        </div>
+      </div>
+    </div>
+  `;
 
   MailApp.sendEmail({
     to: recipient,
