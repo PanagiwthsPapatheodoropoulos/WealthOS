@@ -4,10 +4,12 @@ import { Topbar } from './Topbar'
 import { Sidebar } from './Sidebar'
 import { useWebSocket } from '@/hooks/useWebSocket'
 import { useAuthStore } from '@/stores/authStore'
+import { usePrivacyStore } from '@/stores/privacyStore'
 import { useQueryClient } from '@tanstack/react-query'
 
 export function AppShell() {
   const user = useAuthStore((s) => s.user)
+  const isPrivacyMode = usePrivacyStore((s) => s.isPrivacyMode)
   const queryClient = useQueryClient()
   const { connected, subscribe } = useWebSocket('/ws')
 
@@ -44,7 +46,7 @@ export function AppShell() {
   }, [connected, user?.id, subscribe, queryClient])
 
   return (
-    <div className="flex h-screen">
+    <div className={`flex h-screen ${isPrivacyMode ? 'privacy-active' : ''}`}>
       <Sidebar />
       <div className="flex flex-1 flex-col overflow-hidden">
         <Topbar />

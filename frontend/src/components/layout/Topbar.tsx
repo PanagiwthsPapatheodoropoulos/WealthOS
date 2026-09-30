@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react'
-import { LogOut, Search, Sparkles } from 'lucide-react'
+import { LogOut, Search, Sparkles, Eye, EyeOff } from 'lucide-react'
 import { useCurrentUser } from '@/api/userApi'
 import { useLogout } from '@/api/authApi'
 import { NotificationBell } from './NotificationBell'
 import { useCurrencyStore } from '@/stores/currencyStore'
+import { usePrivacyStore } from '@/stores/privacyStore'
 import { CommandPalette } from '@/components/shared/CommandPalette'
 import { CopilotDrawer } from '@/components/shared/CopilotDrawer'
 
@@ -11,6 +12,7 @@ export function Topbar() {
   const { data: user } = useCurrentUser()
   const logout = useLogout()
   const { currency, setCurrency, setFxRates } = useCurrencyStore()
+  const { isPrivacyMode, togglePrivacyMode } = usePrivacyStore()
 
   const [isCommandOpen, setIsCommandOpen] = useState(false)
   const [isCopilotOpen, setIsCopilotOpen] = useState(false)
@@ -103,6 +105,30 @@ export function Topbar() {
           </button>
         </div>
 
+        {/* Privacy Mode Eye Toggle */}
+        <button
+          type="button"
+          onClick={togglePrivacyMode}
+          className={`flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-xs font-semibold transition-all cursor-pointer shadow-xs ${
+            isPrivacyMode
+              ? 'border-amber-300 bg-amber-50 text-amber-900 shadow-sm'
+              : 'border-zinc-200 bg-zinc-50/80 text-zinc-500 hover:text-zinc-900 hover:bg-white'
+          }`}
+          title={isPrivacyMode ? 'Privacy Mode Active (Balances Hidden) — Click to Reveal' : 'Privacy Mode: Hide Balances'}
+        >
+          {isPrivacyMode ? (
+            <>
+              <EyeOff className="h-3.5 w-3.5 text-amber-700" />
+              <span className="hidden md:inline text-[11px] font-bold text-amber-800">Hidden</span>
+            </>
+          ) : (
+            <>
+              <Eye className="h-3.5 w-3.5 text-zinc-500" />
+              <span className="hidden md:inline text-[11px] font-medium text-zinc-600">Balances</span>
+            </>
+          )}
+        </button>
+
         <NotificationBell />
 
         <div className="h-5 w-px bg-zinc-200" />
@@ -116,7 +142,7 @@ export function Topbar() {
               <p className="text-xs font-semibold text-zinc-900">
                 {user.firstName} {user.lastName}
               </p>
-              <p className="text-[11px] text-zinc-500 font-mono">{user.email}</p>
+              <p className="text-[11px] text-zinc-500 font-mono privacy-blur">{user.email}</p>
             </div>
           </div>
         )}

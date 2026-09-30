@@ -62,3 +62,17 @@
   background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%);
   border: 1px solid #c7d2fe;
 }
+
+/* Privacy mode blur targeting monetary amounts and sensitive figures across pages */
+.privacy-active .privacy-blur,
+.privacy-active [data-privacy-blur] {
+  filter: blur(8px) !important;
+  user-select: none !important;
+  transition: filter 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.privacy-active .privacy-blur:hover,
+.privacy-active [data-privacy-blur]:hover {
+  filter: blur(0px) !important;
+  cursor: pointer;
+}
