@@ -431,7 +431,7 @@ export function DashboardPage() {
               <span className={`text-xs font-bold font-mono px-2 py-0.5 rounded-md ${
                 isActivePositive ? 'bg-emerald-50 text-emerald-700 border border-emerald-200/60' : 'bg-rose-50 text-rose-700 border border-rose-200/60'
               }`}>
-                {isActivePositive ? '+' : ''}{formatBaseMoney(activeDelta)} ({isActivePositive ? '+' : ''}{activeDeltaPct.toFixed(2)}%)
+                <span className="privacy-blur">{isActivePositive ? '+' : ''}{formatBaseMoney(activeDelta)}</span> ({isActivePositive ? '+' : ''}{activeDeltaPct.toFixed(2)}%)
               </span>
               <span className="text-[11px] text-zinc-400 font-medium">
                 {activePoint ? activePoint.l : timeframe === '24H' ? 'Past 24h' : timeframe === '7D' ? 'Past 7 Days' : timeframe === '30D' ? 'Past 30 Days' : timeframe === '3M' ? 'Past Quarter' : 'Year to Date'}
@@ -481,17 +481,17 @@ export function DashboardPage() {
             {/* Horizontal Gridlines & Y-Axis Scale */}
             <g className="grid-lines" opacity="0.6">
               <line x1={padLeft} y1={padTop} x2={padLeft + plotW} y2={padTop} stroke="#e2e8f0" strokeDasharray="3 3" />
-              <text x={padLeft + plotW + 8} y={padTop + 3} fill="#94a3b8" fontSize="9" fontFamily="monospace" textAnchor="start">
+              <text className="privacy-blur" x={padLeft + plotW + 8} y={padTop + 3} fill="#94a3b8" fontSize="9" fontFamily="monospace" textAnchor="start">
                 {formatBaseMoney(chartMax)}
               </text>
 
               <line x1={padLeft} y1={padTop + plotH / 2} x2={padLeft + plotW} y2={padTop + plotH / 2} stroke="#e2e8f0" strokeDasharray="3 3" />
-              <text x={padLeft + plotW + 8} y={padTop + plotH / 2 + 3} fill="#94a3b8" fontSize="9" fontFamily="monospace" textAnchor="start">
+              <text className="privacy-blur" x={padLeft + plotW + 8} y={padTop + plotH / 2 + 3} fill="#94a3b8" fontSize="9" fontFamily="monospace" textAnchor="start">
                 {formatBaseMoney(midVal)}
               </text>
 
               <line x1={padLeft} y1={padTop + plotH} x2={padLeft + plotW} y2={padTop + plotH} stroke="#e2e8f0" strokeDasharray="3 3" />
-              <text x={padLeft + plotW + 8} y={padTop + plotH + 3} fill="#94a3b8" fontSize="9" fontFamily="monospace" textAnchor="start">
+              <text className="privacy-blur" x={padLeft + plotW + 8} y={padTop + plotH + 3} fill="#94a3b8" fontSize="9" fontFamily="monospace" textAnchor="start">
                 {formatBaseMoney(chartMin)}
               </text>
             </g>
