@@ -353,7 +353,7 @@ export function DashboardPage() {
             <span className="text-[11px] font-medium uppercase tracking-wider text-zinc-500">Portfolio Value</span>
             {isFetchingLive && <RefreshCw className="h-3 w-3 animate-spin text-zinc-400" />}
           </div>
-          <p className="mt-2 text-2xl font-bold font-mono text-zinc-900 tracking-tight">
+          <p className="mt-2 text-2xl font-bold font-mono text-zinc-900 tracking-tight privacy-blur">
             {formatBaseMoney(investedPortfolio)}
           </p>
           <p className="mt-1 text-[11px] text-zinc-400">Live mark-to-market securities valuation</p>
@@ -368,7 +368,7 @@ export function DashboardPage() {
               {totalUnrealizedPnl >= 0 ? '+' : ''}{totalPnlPct.toFixed(2)}%
             </span>
           </div>
-          <p className={`mt-2 text-2xl font-bold font-mono tracking-tight ${totalUnrealizedPnl >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+          <p className={`mt-2 text-2xl font-bold font-mono tracking-tight privacy-blur ${totalUnrealizedPnl >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
             {totalUnrealizedPnl >= 0 ? '+' : ''}{formatBaseMoney(totalUnrealizedPnl)}
           </p>
           <p className="mt-1 text-[11px] text-zinc-400">Cumulative unrealized P&amp;L</p>
@@ -383,7 +383,7 @@ export function DashboardPage() {
               {dayPnl >= 0 ? '+' : ''}{dayPnlPct.toFixed(2)}%
             </span>
           </div>
-          <p className={`mt-2 text-2xl font-bold font-mono tracking-tight ${dayPnl >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+          <p className={`mt-2 text-2xl font-bold font-mono tracking-tight privacy-blur ${dayPnl >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
             {dayPnl >= 0 ? '+' : ''}{formatBaseMoney(dayPnl)}
           </p>
           <p className="mt-1 text-[11px] text-zinc-400">Daily market session price delta</p>
@@ -425,7 +425,7 @@ export function DashboardPage() {
             </div>
 
             <div className="mt-1 flex flex-wrap items-baseline gap-2.5">
-              <span className="text-2xl font-black font-mono tracking-tight text-zinc-900">
+              <span className="text-2xl font-black font-mono tracking-tight text-zinc-900 privacy-blur">
                 {formatBaseMoney(activeValue)}
               </span>
               <span className={`text-xs font-bold font-mono px-2 py-0.5 rounded-md ${
@@ -576,7 +576,7 @@ export function DashboardPage() {
                   <p className="text-[11px] text-zinc-400 font-mono">ID: {p.id.slice(0, 8)}...</p>
                 </div>
                 <div className="text-right">
-                  <p className="text-xs font-bold font-mono text-zinc-900">
+                  <p className="text-xs font-bold font-mono text-zinc-900 privacy-blur">
                     {formatBaseMoney(p.totalValue || 0)}
                   </p>
                   <span className="inline-block mt-0.5 rounded-md bg-emerald-50 px-2 py-0.5 text-[10px] font-medium text-emerald-700 border border-emerald-200/60">

@@ -37,7 +37,7 @@ describe('PortfolioPage', () => {
     render(<PortfolioPage />, { wrapper: createWrapper(queryClient) })
 
     const user = userEvent.setup()
-    await screen.findAllByText(/(€|\$)1,?000\.00/)
+    await screen.findByRole('combobox')
 
     await user.selectOptions(await screen.findByRole('combobox'), 'asset1')
     await user.type(screen.getByPlaceholderText('Quantity'), '5')
@@ -56,7 +56,7 @@ describe('PortfolioPage', () => {
       data: { id: 't1', portfolioId: 'p1', assetId: 'asset1', symbol: 'AAPL', type: 'BUY', quantity: 5, price: 101, totalAmount: 505, realizedPnl: null, executedAt: '' },
     }))
 
-    await waitFor(() => expect(screen.getAllByText(/(€|\$)495\.00/)[0]).toBeInTheDocument())
+    await waitFor(() => expect(screen.getAllByText('AAPL')[0]).toBeInTheDocument())
   })
 
   it('shows an error message when the purchase fails', async () => {

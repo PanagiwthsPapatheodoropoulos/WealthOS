@@ -681,7 +681,7 @@ export function AlertsPage() {
                   <Pencil className="h-3 w-3" /> Edit
                 </button>
               </div>
-              <p className="mt-2 text-sm font-bold font-mono text-zinc-900 tracking-tight truncate" title={recipientEmail}>
+              <p className="mt-2 text-sm font-bold font-mono text-zinc-900 tracking-tight truncate privacy-blur" title={recipientEmail}>
                 {recipientEmail || 'None configured'}
               </p>
               <span className="text-[11px] text-emerald-700 font-medium mt-1 flex items-center gap-1">
@@ -906,7 +906,7 @@ export function AlertsPage() {
                           <td className="py-3.5 px-6 font-mono text-zinc-600">
                             <span className="flex items-center gap-1">
                               <Mail className="h-3 w-3 text-zinc-400" />
-                              <span>{recipientEmail || 'Default Account'}</span>
+                              <span className="privacy-blur">{recipientEmail || 'Default Account'}</span>
                             </span>
                           </td>
                           <td className="py-3.5 px-6">

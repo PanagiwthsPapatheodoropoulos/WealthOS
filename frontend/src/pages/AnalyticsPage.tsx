@@ -485,7 +485,7 @@ export function AnalyticsPage() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 bg-white p-4 rounded-2xl border border-zinc-200 shadow-xs">
         <div className="space-y-1">
           <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 block">Current Portfolio</span>
-          <span className="text-2xl font-black font-mono text-zinc-900 block">
+          <span className="text-2xl font-black font-mono text-zinc-900 block privacy-blur">
             {formatMoney(totalHoldingsVal, 'EUR')}
           </span>
           <span className="text-[11px] text-zinc-500 font-sans">
@@ -495,7 +495,7 @@ export function AnalyticsPage() {
 
         <div className="space-y-1">
           <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-700 block">Monthly Savings (DCA)</span>
-          <span className="text-2xl font-black font-mono text-emerald-700 block">
+          <span className="text-2xl font-black font-mono text-emerald-700 block privacy-blur">
             {formatMoney(monthlyContribution, 'EUR')} / mo
           </span>
           <span className="text-[11px] text-zinc-500 font-sans">
@@ -505,7 +505,7 @@ export function AnalyticsPage() {
 
         <div className="space-y-1">
           <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-700 block">Real Purchasing Power ({horizonYears}y)</span>
-          <span className="text-2xl font-black font-mono text-indigo-700 block">
+          <span className="text-2xl font-black font-mono text-indigo-700 block privacy-blur">
             {formatMoney(macroData?.summary?.finalRealPurchasingPower ?? 0, 'EUR')}
           </span>
           <span className="text-[11px] text-zinc-500 font-sans">

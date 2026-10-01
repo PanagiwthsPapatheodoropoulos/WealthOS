@@ -430,7 +430,7 @@ export function PortfolioPage() {
             Portfolio Market Value
           </span>
           <div className="mt-2 flex items-baseline justify-between">
-            <span className="text-2xl font-extrabold tracking-tight font-mono text-zinc-900">
+            <span className="text-2xl font-extrabold tracking-tight font-mono text-zinc-900 privacy-blur">
               {formatMoney(liveHoldingsTotal, currentCurrency)}
             </span>
           </div>
@@ -442,7 +442,7 @@ export function PortfolioPage() {
             Invested Cost Basis
           </span>
           <div className="mt-2 flex items-baseline justify-between">
-            <span className="text-2xl font-extrabold tracking-tight font-mono text-zinc-900">
+            <span className="text-2xl font-extrabold tracking-tight font-mono text-zinc-900 privacy-blur">
               {formatMoney(
                 detail?.holdings?.reduce((s, h) => s + h.quantity * (h.avgCost || 0), 0) || liveHoldingsTotal,
                 currentCurrency
@@ -457,7 +457,7 @@ export function PortfolioPage() {
             Total Unrealized Return
           </span>
           <div className="mt-2 flex items-baseline justify-between">
-            <span className={`text-2xl font-extrabold tracking-tight font-mono ${totalUnrealizedPnl >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+            <span className={`text-2xl font-extrabold tracking-tight font-mono privacy-blur ${totalUnrealizedPnl >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
               {totalUnrealizedPnl >= 0 ? '+' : ''}{formatMoney(totalUnrealizedPnl, currentCurrency)}
             </span>
             <span className={`text-xs font-bold font-mono px-2 py-0.5 rounded-md ${totalUnrealizedPnl >= 0 ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'}`}>
@@ -472,7 +472,7 @@ export function PortfolioPage() {
             Today's Price Movement
           </span>
           <div className="mt-2 flex items-baseline justify-between">
-            <span className={`text-2xl font-extrabold tracking-tight font-mono ${totalDayPnl >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+            <span className={`text-2xl font-extrabold tracking-tight font-mono privacy-blur ${totalDayPnl >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
               {totalDayPnl >= 0 ? '+' : ''}{formatMoney(totalDayPnl, currentCurrency)}
             </span>
             <span className={`text-xs font-bold font-mono px-2 py-0.5 rounded-md ${totalDayPnl >= 0 ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'}`}>
@@ -513,10 +513,7 @@ export function PortfolioPage() {
           <div>
             <h3 className="text-sm font-bold text-zinc-900">Execute Order</h3>
             <p className="text-xs text-zinc-500">
-              {cashBalance > 0 && (
-                <>Available Cash: <strong className="font-mono font-bold text-zinc-900">{formatMoney(cashBalance, currentCurrency)}</strong> &bull; </>
-              )}
-              Total Value: <strong className="font-mono font-bold text-zinc-900">{formatMoney(liveNetWorth, currentCurrency)}</strong>
+              Instant market order routing and live portfolio rebalancing
             </p>
           </div>
           {buyAsset.isError && (
@@ -663,23 +660,23 @@ export function PortfolioPage() {
                         </div>
                       </td>
 
-                      <td className="py-3 px-3 text-right font-mono font-medium text-zinc-700">
+                      <td className="py-3 px-3 text-right font-mono font-medium text-zinc-700 privacy-blur">
                         {h.quantity}
                       </td>
 
-                      <td className="py-3 px-3 text-right font-mono text-zinc-500">
+                      <td className="py-3 px-3 text-right font-mono text-zinc-500 privacy-blur">
                         {formatMoney(h.avgCost, currentCurrency)}
                       </td>
 
-                      <td className="py-3 px-3 text-right font-mono font-bold text-zinc-900">
+                      <td className="py-3 px-3 text-right font-mono font-bold text-zinc-900 privacy-blur">
                         {formatMoney(h.livePrice, currentCurrency)}
                       </td>
 
-                      <td className="py-3 px-3 text-right font-mono font-extrabold text-zinc-900">
+                      <td className="py-3 px-3 text-right font-mono font-extrabold text-zinc-900 privacy-blur">
                         {formatMoney(h.liveMarketValue, currentCurrency)}
                       </td>
 
-                      <td className="py-3 px-3 text-right">
+                      <td className="py-3 px-3 text-right privacy-blur">
                         <div className="font-mono font-bold">
                           <span className={isPosPnl ? 'text-emerald-600' : 'text-rose-600'}>
                             {isPosPnl ? '+' : ''}{formatMoney(h.liveUnrealizedPnl, currentCurrency)}
