@@ -489,7 +489,7 @@ export function AnalyticsPage() {
             {formatMoney(totalHoldingsVal, 'EUR')}
           </span>
           <span className="text-[11px] text-zinc-500 font-sans">
-            5 Active UCITS ETFs • 100% Mark-to-Market
+            {holdings.length > 0 ? holdings.length : '—'} Active Holding{holdings.length !== 1 ? 's' : ''} • 100% Mark-to-Market
           </span>
         </div>
 

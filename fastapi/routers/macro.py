@@ -52,42 +52,42 @@ async def get_treasury_yields(user_id: Optional[str] = Depends(get_optional_user
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/fomc-dot-plot")
-def get_fomc_dot_plot(user_id: Optional[str] = Depends(get_optional_user_id)):
-    """Retrieves FOMC Dot Plot projections, SEP median forecasts, meeting probabilities, and portfolio transmission."""
+async def get_fomc_dot_plot(user_id: Optional[str] = Depends(get_optional_user_id)):
+    """Retrieves FOMC Dot Plot projections with live effective fed funds rate from FRED, SEP median forecasts, and portfolio transmission."""
     try:
-        data = MacroInflationEngine.get_fomc_dot_plot()
+        data = await MacroInflationEngine.get_fomc_dot_plot()
         return {"status": "success", "data": data}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/hyperscaler-capex")
-def get_hyperscaler_capex(user_id: Optional[str] = Depends(get_optional_user_id)):
-    """Retrieves Hyperscaler AI & Datacenter CapEx guidance (MSFT, GOOGL, AMZN, META) and portfolio transmission links."""
+async def get_hyperscaler_capex(user_id: Optional[str] = Depends(get_optional_user_id)):
+    """Retrieves live Hyperscaler AI & Datacenter CapEx (MSFT, GOOGL, AMZN, META) from Yahoo Finance TTM data with portfolio transmission links."""
     try:
-        data = MacroInflationEngine.get_hyperscaler_capex()
+        data = await MacroInflationEngine.get_hyperscaler_capex()
         return {"status": "success", "data": data}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/overview")
 async def get_macro_overview(user_id: Optional[str] = Depends(get_optional_user_id)):
-    """Aggregated macro overview returning FOMC rate path, Treasury yields, Fear & Greed, and Hyperscaler CapEx."""
+    """Aggregated macro overview returning FOMC rate path (live EFFR), Treasury yields, Fear & Greed, and live Hyperscaler CapEx."""
     try:
-        yields = await MacroInflationEngine.fetch_treasury_yields()
-        sentiment = await MacroInflationEngine.compute_fear_and_greed_index()
-        fomc = MacroInflationEngine.get_fomc_dot_plot()
-        capex = MacroInflationEngine.get_hyperscaler_capex()
+        import asyncio
+        yields, sentiment, fomc, capex = await asyncio.gather(
+            MacroInflationEngine.fetch_treasury_yields(),
+            MacroInflationEngine.compute_fear_and_greed_index(),
+            MacroInflationEngine.get_fomc_dot_plot(),
+            MacroInflationEngine.get_hyperscaler_capex(),
+        )
         return {
             "status": "success",
             "data": {
                 "treasuryYields": yields,
                 "sentiment": sentiment,
                 "fomcDotPlot": fomc,
-                "hyperscalerCapEx": capex
+                "hyperscalerCapEx": capex,
             }
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-
-
-
