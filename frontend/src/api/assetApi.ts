@@ -65,13 +65,21 @@ function fetchAssetAnalytics(symbol: string) {
   return http.get<Record<string, unknown>>(`/v1/market/analytics/${symbol}`)
 }
 
+export type BatchQuotesData = Record<string, BatchQuoteItem> & {
+  quotes: Record<string, BatchQuoteItem>
+}
+
 // Batch Quotes for multiple tickers concurrently
-async function fetchBatchQuotes(symbols: string[]): Promise<Record<string, BatchQuoteItem>> {
-  if (!symbols || symbols.length === 0) return {}
+async function fetchBatchQuotes(symbols: string[]): Promise<BatchQuotesData> {
+  if (!symbols || symbols.length === 0) return { quotes: {} } as BatchQuotesData
   const res = await fetch(`/api/assets/quotes/batch?symbols=${encodeURIComponent(symbols.join(','))}`)
   if (!res.ok) throw new Error('Failed to fetch batch quotes')
   const json = await res.json()
-  return json?.data?.quotes || {}
+  const quotesMap: Record<string, BatchQuoteItem> = json?.data?.quotes || {}
+  return {
+    ...quotesMap,
+    quotes: quotesMap,
+  }
 }
 
 // Live Holdings Valuation calculation with real-time unrealized & day PnL
@@ -136,10 +144,11 @@ export function useAssetQuote(symbol: string | undefined) {
 
 export function useBatchQuotes(symbols: string[]) {
   return useQuery({
-    queryKey: ['market', 'batchQuotes', symbols.sort().join(',')],
+    queryKey: ['market', 'batchQuotes', symbols.slice().sort().join(',')],
     queryFn: () => fetchBatchQuotes(symbols),
     enabled: symbols.length > 0,
-    staleTime: 60_000,
+    staleTime: 15_000,
+    refetchInterval: 30_000,
     refetchOnWindowFocus: true,
   })
 }

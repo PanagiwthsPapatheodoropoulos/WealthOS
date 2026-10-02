@@ -117,7 +117,7 @@ export function CommandPalette({ isOpen, onClose, initialSymbol }: CommandPalett
   const [dossierTab, setDossierTab] = useState<'overview' | 'valuation' | 'risk' | 'breakdown'>('overview')
 
   const RECOMMENDED_SYMBOLS = useMemo(() => ['VUAA.MI', 'SMHM', 'NVDA', 'AAPL', 'BTC', 'MSFT'], [])
-  const { data: batchQuotes } = useBatchQuotes(RECOMMENDED_SYMBOLS)
+  const { data: batchQuotes, refetch: refetchBatchQuotes } = useBatchQuotes(RECOMMENDED_SYMBOLS)
 
   // Chart state
   const [selectedTimeframe, setSelectedTimeframe] = useState('1M')
@@ -140,6 +140,7 @@ export function CommandPalette({ isOpen, onClose, initialSymbol }: CommandPalett
 
   useEffect(() => {
     if (isOpen) {
+      refetchBatchQuotes?.()
       setTimeout(() => inputRef.current?.focus(), 60)
       document.body.style.overflow = 'hidden'
     } else {
@@ -492,17 +493,18 @@ export function CommandPalette({ isOpen, onClose, initialSymbol }: CommandPalett
                 </span>
                 <div className="divide-y divide-zinc-100">
                   {[
-                    { symbol: 'VUAA.MI', name: 'Vanguard S&P 500 UCITS ETF (EUR)', assetType: 'ETF', currentPrice: 128.01, currency: 'EUR', priceChange24h: 0.13 },
-                    { symbol: 'SMHM', name: 'VanEck Semiconductor UCITS ETF (EUR)', assetType: 'ETF', currentPrice: 86.42, currency: 'EUR', priceChange24h: -0.85 },
-                    { symbol: 'NVDA', name: 'NVIDIA Corporation', assetType: 'STOCK', currentPrice: 226.57, currency: 'USD', priceChange24h: 2.14 },
-                    { symbol: 'AAPL', name: 'Apple Inc.', assetType: 'STOCK', currentPrice: 328.46, currency: 'USD', priceChange24h: 0.52 },
-                    { symbol: 'BTC', name: 'Bitcoin', assetType: 'CRYPTO', currentPrice: 110850.0, currency: 'USD', priceChange24h: 1.84 },
-                    { symbol: 'MSFT', name: 'Microsoft Corporation', assetType: 'STOCK', currentPrice: 508.25, currency: 'USD', priceChange24h: 0.78 },
+                    { symbol: 'VUAA.MI', name: 'Vanguard S&P 500 UCITS ETF (EUR)', assetType: 'ETF', currentPrice: 132.28, currency: 'EUR', priceChange24h: 0.73 },
+                    { symbol: 'SMHM', name: 'VanEck Semiconductor UCITS ETF (EUR)', assetType: 'ETF', currentPrice: 103.93, currency: 'EUR', priceChange24h: 2.18 },
+                    { symbol: 'NVDA', name: 'NVIDIA Corporation', assetType: 'STOCK', currentPrice: 230.86, currency: 'USD', priceChange24h: 1.09 },
+                    { symbol: 'AAPL', name: 'Apple Inc.', assetType: 'STOCK', currentPrice: 330.32, currency: 'USD', priceChange24h: -0.81 },
+                    { symbol: 'BTC', name: 'Bitcoin', assetType: 'CRYPTO', currentPrice: 86481.0, currency: 'USD', priceChange24h: 3.55 },
+                    { symbol: 'MSFT', name: 'Microsoft Corporation', assetType: 'STOCK', currentPrice: 512.80, currency: 'USD', priceChange24h: -0.02 },
                   ].map((item) => {
-                    const liveQ = batchQuotes?.quotes?.[item.symbol]
+                    const liveQ = (batchQuotes as any)?.[item.symbol] ?? (batchQuotes as any)?.quotes?.[item.symbol]
                     const price = liveQ?.price && liveQ.price > 0 ? liveQ.price : item.currentPrice
                     const chg24 = liveQ?.change24h != null ? liveQ.change24h : item.priceChange24h
                     const isPos = chg24 >= 0
+                    const currency = liveQ?.currency || item.currency
 
                     return (
                       <button
@@ -527,7 +529,7 @@ export function CommandPalette({ isOpen, onClose, initialSymbol }: CommandPalett
                         </div>
                         <div className="text-right font-mono">
                           <span className="font-bold text-sm text-zinc-900">
-                            {formatMoney(price, item.currency)}
+                            {formatMoney(price, currency)}
                           </span>
                           <div className={`flex items-center justify-end gap-0.5 text-xs font-bold ${
                             isPos ? 'text-emerald-600' : 'text-rose-600'

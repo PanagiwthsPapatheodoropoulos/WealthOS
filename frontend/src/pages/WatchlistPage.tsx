@@ -818,7 +818,7 @@ export function WatchlistPage() {
                   <tbody className="divide-y divide-zinc-100">
                     {safeItems.map((item) => {
                       const deep = metricsMap[item.symbol] || {}
-                      const liveQuote = liveQuotes?.quotes?.[item.symbol.toUpperCase()]
+                      const liveQuote = (liveQuotes as any)?.[item.symbol.toUpperCase()] ?? (liveQuotes as any)?.quotes?.[item.symbol.toUpperCase()]
                       const curPrice = liveQuote?.price || item.currentPrice || deep.current_price || deep.currentPrice || 0
                       const change24h = liveQuote?.change24h ?? deep.price_change_24h ?? deep.priceChange24h ?? null
                       const isEur = item.symbol.includes('.MI') || item.symbol.includes('.DE') || item.symbol.includes('VUAA') || item.symbol.includes('SMH') || deep.currency === 'EUR' || liveQuote?.currency === 'EUR'

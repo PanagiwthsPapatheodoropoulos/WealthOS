@@ -463,7 +463,7 @@ class RealMarketDataService:
             return []
 
         cache_key = f"asset_search_{q.upper()}"
-        cached = _get_from_cache(cache_key, 60.0)
+        cached = _get_from_cache(cache_key, 10.0)
         if cached:
             return cached
 
@@ -493,8 +493,8 @@ class RealMarketDataService:
                 "assetType": "ETF",
                 "sector": "Large Cap US Equities",
                 "currency": "EUR",
-                "currentPrice": 128.01,
-                "priceChange24h": 0.13,
+                "currentPrice": 0.0,
+                "priceChange24h": 0.0,
             }
         if "SMH" in q_upper:
             results_map["SMHM"] = {
@@ -503,8 +503,8 @@ class RealMarketDataService:
                 "assetType": "ETF",
                 "sector": "Semiconductor Industry",
                 "currency": "EUR",
-                "currentPrice": 86.42,
-                "priceChange24h": -0.85,
+                "currentPrice": 0.0,
+                "priceChange24h": 0.0,
             }
 
         # 3. Yahoo Finance live search
@@ -537,21 +537,23 @@ class RealMarketDataService:
         except Exception as e:
             logger.debug(f"Yahoo live search error for '{q}': {e}")
 
-        # 4. Fill live prices for ALL candidates concurrently
+        # 4. Fill live prices for ALL candidates concurrently via batch quotes
         candidates_list = list(results_map.values())[:12]
-
-        async def enrich_item(res: Dict[str, Any]):
+        symbols_to_quote = [r["symbol"] for r in candidates_list]
+        if symbols_to_quote:
             try:
-                quote = await cls.fetch_live_stock_price(res["symbol"])
-                if quote and quote.get("price", 0) > 0:
-                    res["currentPrice"] = quote.get("price", 0.0)
-                    res["priceChange24h"] = quote.get("change_24h", 0.0)
-                    if quote.get("currency"):
-                        res["currency"] = quote.get("currency")
-            except Exception:
-                pass
-
-        await asyncio.gather(*[enrich_item(r) for r in candidates_list], return_exceptions=True)
+                batch_res = await cls.fetch_batch_quotes(symbols_to_quote)
+                quotes_map = batch_res.get("quotes", {})
+                for res in candidates_list:
+                    sym_key = res["symbol"].upper()
+                    q_data = quotes_map.get(sym_key) or quotes_map.get(sym_key.split(".")[0])
+                    if q_data and q_data.get("price", 0) > 0:
+                        res["currentPrice"] = q_data.get("price", 0.0)
+                        res["priceChange24h"] = q_data.get("change24h", 0.0)
+                        if q_data.get("currency"):
+                            res["currency"] = q_data.get("currency")
+            except Exception as e:
+                logger.debug(f"Error enriching search live prices: {e}")
 
         # Prioritize items with positive live prices
         valid_items = [r for r in candidates_list if r.get("currentPrice", 0) > 0]
