@@ -1,7 +1,7 @@
 package com.wealthos.backend.assets.repository;
 
 import com.wealthos.backend.assets.entity.Asset;
-import com.wealthos.backend.assets.entity.AssetType;
+import com.wealthos.backend.assets.enums.AssetType;
 import com.wealthos.backend.support.AbstractIntegrationTest;
 import jakarta.persistence.PersistenceException;
 import org.junit.jupiter.api.Test;

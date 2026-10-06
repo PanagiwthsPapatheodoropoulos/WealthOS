@@ -1,5 +1,6 @@
 package com.wealthos.backend.assets.entity;
 
+import com.wealthos.backend.assets.enums.AssetType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;

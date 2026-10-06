@@ -1,6 +1,6 @@
 package com.wealthos.backend.assets.dto;
 
-import com.wealthos.backend.assets.entity.AssetType;
+import com.wealthos.backend.assets.enums.AssetType;
 
 import java.math.BigDecimal;
 import java.time.Instant;

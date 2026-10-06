@@ -1,10 +1,10 @@
 package com.wealthos.backend.portfolios.repository;
 
 import com.wealthos.backend.accounts.entity.Account;
-import com.wealthos.backend.accounts.entity.AccountType;
+import com.wealthos.backend.accounts.enums.AccountType;
 import com.wealthos.backend.accounts.repository.AccountRepository;
 import com.wealthos.backend.assets.entity.Asset;
-import com.wealthos.backend.assets.entity.AssetType;
+import com.wealthos.backend.assets.enums.AssetType;
 import com.wealthos.backend.assets.repository.AssetRepository;
 import com.wealthos.backend.portfolios.entity.Portfolio;
 import com.wealthos.backend.portfolios.entity.PortfolioAsset;

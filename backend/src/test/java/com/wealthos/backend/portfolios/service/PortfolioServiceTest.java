@@ -1,10 +1,10 @@
 package com.wealthos.backend.portfolios.service;
 
 import com.wealthos.backend.accounts.entity.Account;
-import com.wealthos.backend.accounts.entity.AccountType;
+import com.wealthos.backend.accounts.enums.AccountType;
 import com.wealthos.backend.accounts.repository.AccountRepository;
 import com.wealthos.backend.assets.entity.Asset;
-import com.wealthos.backend.assets.entity.AssetType;
+import com.wealthos.backend.assets.enums.AssetType;
 import com.wealthos.backend.assets.repository.AssetRepository;
 import com.wealthos.backend.common.exception.ResourceNotFoundException;
 import com.wealthos.backend.portfolios.dto.CreatePortfolioRequest;

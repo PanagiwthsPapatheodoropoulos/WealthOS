@@ -3,7 +3,7 @@ package com.wealthos.backend.accounts.service;
 import com.wealthos.backend.accounts.dto.AccountResponse;
 import com.wealthos.backend.accounts.dto.CreateAccountRequest;
 import com.wealthos.backend.accounts.entity.Account;
-import com.wealthos.backend.accounts.entity.AccountType;
+import com.wealthos.backend.accounts.enums.AccountType;
 import com.wealthos.backend.accounts.mapper.AccountMapper;
 import com.wealthos.backend.accounts.repository.AccountRepository;
 import com.wealthos.backend.common.exception.BusinessRuleException;

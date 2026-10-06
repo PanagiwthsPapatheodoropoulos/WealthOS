@@ -1,7 +1,7 @@
 package com.wealthos.backend.portfolios.repository;
 
 import com.wealthos.backend.accounts.entity.Account;
-import com.wealthos.backend.accounts.entity.AccountType;
+import com.wealthos.backend.accounts.enums.AccountType;
 import com.wealthos.backend.accounts.repository.AccountRepository;
 import com.wealthos.backend.portfolios.entity.Portfolio;
 import com.wealthos.backend.support.AbstractIntegrationTest;
@@ -12,7 +12,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.math.BigDecimal;
-import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 

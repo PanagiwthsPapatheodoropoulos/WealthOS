@@ -1,5 +1,6 @@
 package com.wealthos.backend.accounts.entity;
 
+import com.wealthos.backend.accounts.enums.AccountType;
 import com.wealthos.backend.users.entity.User;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

@@ -1,8 +1,7 @@
 package com.wealthos.backend.notifications;
 
-import com.wealthos.backend.accounts.dto.AccountResponse;
 import com.wealthos.backend.assets.entity.Asset;
-import com.wealthos.backend.assets.entity.AssetType;
+import com.wealthos.backend.assets.enums.AssetType;
 import com.wealthos.backend.assets.repository.AssetRepository;
 import com.wealthos.backend.auth.dto.AuthResponse;
 import com.wealthos.backend.auth.dto.RegisterRequest;

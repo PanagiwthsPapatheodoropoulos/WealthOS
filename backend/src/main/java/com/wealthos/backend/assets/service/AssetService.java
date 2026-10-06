@@ -6,7 +6,7 @@ import com.wealthos.backend.assets.dto.CreateAssetRequest;
 import com.wealthos.backend.assets.dto.UpdateAssetPriceRequest;
 import com.wealthos.backend.assets.entity.Asset;
 import com.wealthos.backend.assets.entity.AssetPriceHistory;
-import com.wealthos.backend.assets.entity.AssetType;
+import com.wealthos.backend.assets.enums.AssetType;
 import com.wealthos.backend.assets.mapper.AssetMapper;
 import com.wealthos.backend.assets.repository.AssetPriceHistoryRepository;
 import com.wealthos.backend.assets.repository.AssetRepository;

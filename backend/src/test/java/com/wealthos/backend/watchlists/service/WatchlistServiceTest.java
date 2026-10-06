@@ -1,7 +1,7 @@
 package com.wealthos.backend.watchlists.service;
 
 import com.wealthos.backend.assets.entity.Asset;
-import com.wealthos.backend.assets.entity.AssetType;
+import com.wealthos.backend.assets.enums.AssetType;
 import com.wealthos.backend.assets.service.AssetService;
 import com.wealthos.backend.common.exception.ConflictException;
 import com.wealthos.backend.common.exception.ResourceNotFoundException;

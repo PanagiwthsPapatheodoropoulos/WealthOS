@@ -26,8 +26,12 @@ public class AnalyticsController {
     public ApiResponse<PortfolioPerformanceResponse> getPerformance(
             @PathVariable UUID portfolioId,
             @CurrentUser AuthenticatedUser currentUser) {
+                List<String> strings;
+                strings.
         return ApiResponse.ok(analyticsService.getPortfolioPerformance(portfolioId, currentUser.id()));
     }
+
+
 
     @GetMapping("/allocation")
     public ApiResponse<List<AssetAllocationResponse>> getAllocation(

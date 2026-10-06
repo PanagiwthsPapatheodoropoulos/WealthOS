@@ -8,6 +8,7 @@ import com.wealthos.backend.orders.dto.OrderFillResponse;
 import com.wealthos.backend.orders.dto.OrderResponse;
 import com.wealthos.backend.orders.service.OrderService;
 import jakarta.validation.Valid;
+import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
