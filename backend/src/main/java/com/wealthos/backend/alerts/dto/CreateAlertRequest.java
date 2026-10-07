@@ -1,6 +1,6 @@
 package com.wealthos.backend.alerts.dto;
 
-import com.wealthos.backend.alerts.entity.AlertCondition;
+import com.wealthos.backend.alerts.enums.AlertCondition;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotNull;
 

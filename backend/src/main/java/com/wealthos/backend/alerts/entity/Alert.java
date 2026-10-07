@@ -1,5 +1,6 @@
 package com.wealthos.backend.alerts.entity;
 
+import com.wealthos.backend.alerts.enums.AlertCondition;
 import com.wealthos.backend.assets.entity.Asset;
 import com.wealthos.backend.users.entity.User;
 import jakarta.persistence.Column;

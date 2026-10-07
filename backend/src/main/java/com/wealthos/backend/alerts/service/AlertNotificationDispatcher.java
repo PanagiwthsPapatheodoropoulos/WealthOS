@@ -2,7 +2,7 @@ package com.wealthos.backend.alerts.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wealthos.backend.alerts.entity.Alert;
-import com.wealthos.backend.alerts.entity.AlertCondition;
+import com.wealthos.backend.alerts.enums.AlertCondition;
 import com.wealthos.backend.notifications.entity.NotificationType;
 import com.wealthos.backend.notifications.service.NotificationService;
 import lombok.RequiredArgsConstructor;

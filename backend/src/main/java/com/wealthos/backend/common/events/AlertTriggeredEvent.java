@@ -1,6 +1,6 @@
 package com.wealthos.backend.common.events;
 
-import com.wealthos.backend.alerts.entity.AlertCondition;
+import com.wealthos.backend.alerts.enums.AlertCondition;
 
 import java.math.BigDecimal;
 import java.util.UUID;

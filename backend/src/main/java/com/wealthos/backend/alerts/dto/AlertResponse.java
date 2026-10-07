@@ -1,6 +1,6 @@
 package com.wealthos.backend.alerts.dto;
 
-import com.wealthos.backend.alerts.entity.AlertCondition;
+import com.wealthos.backend.alerts.enums.AlertCondition;
 import com.wealthos.backend.alerts.entity.AlertStatus;
 import lombok.Builder;
 

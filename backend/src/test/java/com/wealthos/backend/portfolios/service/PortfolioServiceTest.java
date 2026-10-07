@@ -101,7 +101,7 @@ class PortfolioServiceTest {
         Portfolio portfolio = Portfolio.builder().id(UUID.randomUUID()).account(account).name("Empty").build();
 
         when(portfolioRepository.findAllByUserId(userId)).thenReturn(List.of(portfolio));
-        when(portfolioAssetRepository.findByPortfolioId(portfolio.getId())).thenReturn(List.of());
+        when(portfolioAssetRepository.findByPortfolioIdIn(List.of(portfolio.getId()))).thenReturn(List.of());
 
         List<PortfolioSummaryResponse> result = portfolioService.getMyPortfolios(userId);
 
